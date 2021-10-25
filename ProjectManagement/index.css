@@ -1,0 +1,27 @@
+body {
+    background-color: #0d1117;
+    margin: 0;
+}
+h1 {
+    margin: 10 0 0 0; 
+    font-family: 'Noto Sans HK', sans-serif;
+    color: whitesmoke;
+    font-size: 20pt;
+    text-align: center;
+}
+h1 span {
+    border-bottom: 5px ridge #384592; 
+}
+.nav-elem {
+    font-family: 'Noto Sans HK', sans-serif;
+    color: whitesmoke;
+    text-decoration: none;
+    font-weight:bold;
+    margin:20px
+}
+.nav-header-container {
+    display: flex;
+    align-items: center;
+    background-color: #161b22;
+    border-color: #161b22;
+}
