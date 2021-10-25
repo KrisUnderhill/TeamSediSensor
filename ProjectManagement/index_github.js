@@ -48,7 +48,6 @@ function DrawNavBar() {
 }
 
 function DrawGanttTasks(tasksJson) {
-    //TODO: Refactor this into a not stupidly long function
     const dispWidth  = 800; // TODO: Make this more general
     const dispHeight = 600;
     console.log(tasksJson);
@@ -62,6 +61,7 @@ function DrawGanttTasks(tasksJson) {
     var boxY = 25;
     let svg; let text;
     let firstIter = true;
+    var nIter = 0;
     tasksJson.forEach(d => {
         svg = d3.select("svg#tasksDisplay");
         // Draw rectangles + text
@@ -79,40 +79,11 @@ function DrawGanttTasks(tasksJson) {
             .attr('font-size', 12)
             .attr('fill', "whitesmoke")
         lastx += maxNameLen;
-        let done = false; let startWeek = false;
-        let day = new Date(); let dayNum = 0; let dateNum = 0;
-        while(!done){
-            if(firstIter){ // do all the text on the first iteration
-            // TODO: Decide whether or not to set day based on current day or beginning of tasks
-                if(startWeek){
-                    text = svg.append('text').text((day.getMonth() + 1) + '/' + day.getDate())
-                        .attr('x', lastx - 15) // Since we take the first loop iteration to set the date
-                                               // it starts drawing boxes, decrement the x position to put 
-                                               // it in the right spots, This solution needs to be improved TODO
-                        .attr('y', lasty - 5)
-                        .attr('font-family', 'Noto Sans HK, sans-serif')
-                        .attr('font-size', 12)
-                        .attr('fill', "whitesmoke")
-                        .attr("transform", "rotate(-45,"+(lastx-15)+","+(lasty-5)+")")  // AW c'mon js has to have a better way for formatting strings than this TODO
-                    // Increment Date
-                    day.setDate(dateNum+=7);
-                    if(day.getDate() < dateNum){
-                        dateNum = day.getDate();
-                    }
-                } 
-                else {
-                    // Set tracking Numbers
-                    dayNum = day.getDay(); 
-                    dateNum = day.getDate();
-                    // Set Day to Monday to start drawing stuff
-                    if(dayNum === 0) { day.setDate(++dateNum) } // sun => mon   
-                    else if (dayNum === 1) { /* Mon -- skip*/ }
-                    // TODO: Decide whether this should set to next monday or monday before
-                    else { day.setDate(dateNum + (8-dayNum)) } // >Mon => Next mon, Test on Tues etc
-                    // Set to Draw, aligned dates
-                    startWeek = true;
-                }
-            }
+        if(firstIter) {
+            nIter = drawSVGDates(svg, lastx, lasty);
+            firstIter = false;
+        }
+        for(let i=0; i<nIter; i++){
             svg.append('rect')
                 .attr('x', lastx)
                 .attr('y', lasty)
@@ -121,23 +92,55 @@ function DrawGanttTasks(tasksJson) {
                 .attr('stroke', 'whitesmoke')
                 .attr('stroke-width', 2)
             lastx += boxX;
-            if(firstIter) {
-                if (day.getMonth() === 0) { // Index at 0 => 11 === Dec
-                    firstIter = false;
-                    done = true;
-                    lastx = 25;
-                }
-            }
-            else{
-                done = true
-                lastx = 25
-            }
         }
+        lastx = 25; // Reset
         lasty+=boxY;
     });
 }
 
-//drawSVGDates(svg) {}
+function drawSVGDates(svg, lastx, lasty) {
+    let boxX = 25; // TODO: Make a better way to pass variables
+    let done = false; let startWeek = false;
+    let count = 0;
+    let day = new Date(); let dayNum = 0; let dateNum = 0;
+    while(!done){
+        // TODO: Decide whether or not to set day based on current day or beginning of tasks
+        if(startWeek){
+            text = svg.append('text').text((day.getMonth() + 1) + '/' + day.getDate())
+                .attr('x', lastx - 15) // Since we take the first loop iteration to set the date
+                                       // it starts drawing boxes, decrement the x position to put 
+                                       // it in the right spots, This solution needs to be improved TODO
+                .attr('y', lasty - 5)
+                .attr('font-family', 'Noto Sans HK, sans-serif')
+                .attr('font-size', 12)
+                .attr('fill', "whitesmoke")
+                .attr("transform", "rotate(-45,"+(lastx-15)+","+(lasty-5)+")")  // AW c'mon js has to have a better way for formatting strings than this TODO
+            // Increment Date
+            day.setDate(dateNum+=7);
+            if(day.getDate() < dateNum){
+                dateNum = day.getDate();
+            }
+            count++;
+        } 
+        else {
+            // Set tracking Numbers
+            dayNum = day.getDay(); 
+            dateNum = day.getDate();
+            // Set Day to Monday to start drawing stuff
+            if(dayNum === 0) { day.setDate(++dateNum) } // sun => mon   
+            else if (dayNum === 1) { /* Mon -- skip*/ }
+            // TODO: Decide whether this should set to next monday or monday before
+            else { day.setDate(dateNum + (8-dayNum)) } // >Mon => Next mon, Test on Tues etc
+            // Set to Draw, aligned dates
+            startWeek = true;
+        }
+        if (day.getMonth() === 0) { // Index at 0 => 11 === Jan
+            done = true;
+        }
+        lastx += boxX
+    }
+    return count;
+}
     
 main()
 
