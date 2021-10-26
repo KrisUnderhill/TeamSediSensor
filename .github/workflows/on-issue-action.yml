@@ -1,5 +1,6 @@
 name: resolve-issue-creation
 on: 
+  push:
   issues:
     types: [opened, edited, reopened]
 jobs:
