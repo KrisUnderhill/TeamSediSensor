@@ -9,6 +9,6 @@ jobs:
       - uses: actions/github-script@v5 
         with: 
           script: | 
-            issues = 1;
+            issues = "HelloWorld";
             console.log(issues);
 
