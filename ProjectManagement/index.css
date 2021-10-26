@@ -44,9 +44,12 @@ table {
     color: whitesmoke;
     transform: rotate(315deg) translate(10px, -10px);
 }
-.gantt-table-cell-center {
+.gantt-table-cell-blank {
     width: 40px;
     height: 30px;
     border: 2px solid whitesmoke;
     border-collapse: collapse;
+}
+.div-filled {
+    background-color: maroon;
 }

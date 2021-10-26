@@ -82,15 +82,23 @@ function DrawGanttTasks(tasksJson) {
     // Draw "body" cells of table
     tasksJson.forEach(task => {
         var row = document.createElement("tr")
-        var task_cell = document.createElement("td");
-        task_cell.innerHTML = task.title;
-        task_cell.classList.add("gantt-table-cell-task")
-        row.appendChild(task_cell);
+        var taskCell = document.createElement("td");
+        taskCell.innerHTML = task.title;
+        taskCell.classList.add("gantt-table-cell-task")
+        row.appendChild(taskCell);
         days.forEach(day => {
             var cell = document.createElement("td");
             var div = document.createElement("div");
+            bodyArr = (task.body).match(/Start: (\w+.\w+)[\S\s]*End: (\w+.\w+)/) // TODO make this regex more general
+            if(bodyArr != null) {
+                if(DateCmp(day, bodyArr[1]) != -1){
+                    if(DateCmp(day, bodyArr[2]) != 1){ // Start < day < End 
+                        cell.classList.add("div-filled");
+                    }
+                }
+            }
+            cell.classList.add("gantt-table-cell-blank");
             cell.appendChild(div);
-            cell.classList.add("gantt-table-cell-center");
             row.appendChild(cell);
         });
         table.appendChild(row);
@@ -107,6 +115,7 @@ function genDates() {
         if(startWeek){
             dayHeaders.push((day.getMonth() + 1) + '/' + day.getDate())
             // Increment Date
+            dateNum = day.getDate();
             day.setDate(dateNum+=7);
             if(day.getDate() < dateNum){
                 dateNum = day.getDate();
@@ -119,7 +128,7 @@ function genDates() {
             // Set Day to Monday to start drawing stuff
             if(dayNum === 0) { day.setDate(++dateNum) } // sun => mon   
             else if (dayNum === 1) { /* Mon -- skip*/ }
-            else { day.setDate(dateNum - (dayNum-1)) } // >Mon => mon before , Test on Tues etc
+            else { day.setDate(dateNum - (dayNum-1)) } // >Mon => mon before , TODO Test on Tues etc
             // Set to Draw, aligned dates
             startWeek = true;
         }
@@ -145,7 +154,7 @@ function DateCmp(date1, date2) {
     // formate firstDate = [date1, month1, day1]; etc
     month1 = parseInt(firstDate[1]);
     day1 = parseInt(firstDate[2]);
-    month2 = parseInt(secondDate[2]);
+    month2 = parseInt(secondDate[1]);
     day2 = parseInt(secondDate[2]);
     if (month1 < month2){ return -1; }
     else if (month1 > month2){ return 1; }
