@@ -1,0 +1,16 @@
+name: resolve-issue-creation
+on: 
+  issues:
+    types: [opened, edited, reopened]
+jobs:
+  download-parse-issue-data:
+    runs-on: ubuntu-latest
+    steps: 
+      -uses: actions/github-script@v5 
+        with: 
+          script: | 
+            const issues = await github.rest.issues.list({
+              filter: all
+            })
+            console.log(issues);
+
