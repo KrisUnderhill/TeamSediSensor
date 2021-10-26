@@ -7,8 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       -uses: actions/github-script@v5 
-        with: 
-          script: | 
-            issues = 1;
-            console.log(issues);
+       with: 
+         script: | 
+           issues = 1;
+           console.log(issues);
 
