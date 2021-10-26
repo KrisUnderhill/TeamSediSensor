@@ -48,79 +48,52 @@ function DrawNavBar() {
 }
 
 function DrawGanttTasks(tasksJson) {
-    const dispWidth  = 800; // TODO: Make this more general
-    const dispHeight = 600;
-    console.log(tasksJson);
-    d3.select("svg#tasksDisplay")
-        .attr("width", dispWidth)
-        .attr("height", dispHeight)
-    var lastx = 25;
-    var lasty = 50;
-    var maxNameLen = 200;
-    var boxX = 25;
-    var boxY = 25;
-    let svg; let text;
-    let firstIter = true;
-    var nIter = 0;
-    tasksJson.forEach(d => {
-        svg = d3.select("svg#tasksDisplay");
-        // Draw rectangles + text
-        svg.append('rect')
-            .attr('x', lastx)
-            .attr('y', lasty)
-            .attr('width', maxNameLen)
-            .attr('height', boxY)
-            .attr('stroke', 'whitesmoke')
-            .attr('stroke-width', 2)
-        text = svg.append('text').text(d.title)
-            .attr('x', lastx + 5)
-            .attr('y', lasty + 20)
-            .attr('font-family', 'Noto Sans HK, sans-serif')
-            .attr('font-size', 12)
-            .attr('fill', "whitesmoke")
-        lastx += maxNameLen;
-        if(firstIter) {
-            nIter = drawSVGDates(svg, lastx, lasty);
-            firstIter = false;
-        }
-        for(let i=0; i<nIter; i++){
-            svg.append('rect')
-                .attr('x', lastx)
-                .attr('y', lasty)
-                .attr('width' , boxX)
-                .attr('height', boxY)
-                .attr('stroke', 'whitesmoke')
-                .attr('stroke-width', 2)
-            lastx += boxX;
-        }
-        lastx = 25; // Reset
-        lasty+=boxY;
+    const table = document.getElementById("tasksDisplay_Div");
+    days = genDates()
+    var firstRow = document.createElement("tr");
+    var emptyCell = document.createElement("td");
+    firstRow.appendChild(emptyCell);
+    days.forEach(day => {
+        var dateCell = document.createElement("td");
+        var dateDiv = document.createElement("div");
+        dateDiv.innerHTML = day;
+        dateDiv.classList.add("gantt-table-cell-date");
+        dateCell.appendChild(dateDiv);
+        firstRow.appendChild(dateCell);
+    });
+    table.appendChild(firstRow);
+
+    tasksJson.forEach(task => {
+        var row = document.createElement("tr")
+        var task_cell = document.createElement("td");
+        task_cell.innerHTML = task.title;
+        task_cell.classList.add("gantt-table-cell-task")
+        row.appendChild(task_cell);
+        days.forEach(day => {
+            var cell = document.createElement("td");
+            var div = document.createElement("div");
+            cell.appendChild(div);
+            cell.classList.add("gantt-table-cell-center");
+            row.appendChild(cell);
+        });
+        table.appendChild(row);
     });
 }
 
-function drawSVGDates(svg, lastx, lasty) {
-    let boxX = 25; // TODO: Make a better way to pass variables
+function genDates() {
     let done = false; let startWeek = false;
-    let count = 0;
+    let dayHeaders = [];
     let day = new Date(); let dayNum = 0; let dateNum = 0;
     while(!done){
         // TODO: Decide whether or not to set day based on current day or beginning of tasks
+        // should probably set on tasks -- that would be more general
         if(startWeek){
-            text = svg.append('text').text((day.getMonth() + 1) + '/' + day.getDate())
-                .attr('x', lastx - 15) // Since we take the first loop iteration to set the date
-                                       // it starts drawing boxes, decrement the x position to put 
-                                       // it in the right spots, This solution needs to be improved TODO
-                .attr('y', lasty - 5)
-                .attr('font-family', 'Noto Sans HK, sans-serif')
-                .attr('font-size', 12)
-                .attr('fill', "whitesmoke")
-                .attr("transform", "rotate(-45,"+(lastx-15)+","+(lasty-5)+")")  // AW c'mon js has to have a better way for formatting strings than this TODO
+            dayHeaders.push((day.getMonth() + 1) + '/' + day.getDate())
             // Increment Date
             day.setDate(dateNum+=7);
             if(day.getDate() < dateNum){
                 dateNum = day.getDate();
             }
-            count++;
         } 
         else {
             // Set tracking Numbers
@@ -129,17 +102,15 @@ function drawSVGDates(svg, lastx, lasty) {
             // Set Day to Monday to start drawing stuff
             if(dayNum === 0) { day.setDate(++dateNum) } // sun => mon   
             else if (dayNum === 1) { /* Mon -- skip*/ }
-            // TODO: Decide whether this should set to next monday or monday before
-            else { day.setDate(dateNum + (8-dayNum)) } // >Mon => Next mon, Test on Tues etc
+            else { day.setDate(dateNum - (dayNum-1)) } // >Mon => mon before , Test on Tues etc
             // Set to Draw, aligned dates
             startWeek = true;
         }
-        if (day.getMonth() === 0) { // Index at 0 => 11 === Jan
+        if (day.getMonth() === 0) { // Index at 0 => 0 === until Jan
             done = true;
         }
-        lastx += boxX
     }
-    return count;
+    return dayHeaders;
 }
     
 main()
