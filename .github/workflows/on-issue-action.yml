@@ -9,8 +9,6 @@ jobs:
       -uses: actions/github-script@v5 
         with: 
           script: | 
-            const issues = await github.rest.issues.list({
-              filter: all
-            })
+            issues = 1;
             console.log(issues);
 
