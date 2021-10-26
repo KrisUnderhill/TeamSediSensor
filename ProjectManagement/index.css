@@ -28,6 +28,7 @@ h1 span {
 }
 table {
     margin: 20px;
+    margin-left: 1in;
     border-collapse: collapse;
 }
 .gantt-table-cell-task {
