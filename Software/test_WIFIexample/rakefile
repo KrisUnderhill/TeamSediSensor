@@ -1,0 +1,42 @@
+# Rakefile for test_WIFIexample of TeamSediSensor building for the ESP32 devkit-v1 board
+require 'fileutils'
+
+namespace "app" do
+  task :setBuildPath do
+    # create build directory if it does not exist already
+    unless Dir.exist?("Build")
+      Dir.mkdir("Build")
+    end
+
+    #set preferences
+    fullPath = Dir.getwd
+    buildPath = File.join(fullPath, "Build") 
+    system "arduino --pref build.path=#{buildPath} --board esp32:esp32:esp32doit-devkit-v1 --save-prefs" 
+  end
+
+  task build: %[setBuildPath] do
+    # build the main .ino arduino program
+    #
+    # create build cmd string
+    fullPath = Dir.getwd
+    dirname = File.basename(fullPath)
+    filePath = File.join(fullPath, "Code", "#{dirname}.ino")
+    buildCmd = "arduino --verify #{filePath}"
+
+
+    # exec buildCmd
+    system buildCmd
+  end
+end
+
+task :serial do |t|
+  puts t
+end
+
+task :clean do
+  FileUtils.rm_rf("Build") 
+end
+
+task build: %[app:build]
+
+task default: %[build]
