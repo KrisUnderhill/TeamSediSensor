@@ -2,18 +2,35 @@
 require 'fileutils'
 
 namespace "app" do
+
+  desc 'create build directory if it does not exist already'
   task :setBuildPath do
-    # create build directory if it does not exist already
     unless Dir.exist?("Build")
       Dir.mkdir("Build")
     end
 
-    #set preferences
     fullPath = Dir.getwd
     buildPath = File.join(fullPath, "Build") 
-    system "arduino --pref build.path=#{buildPath} --board esp32:esp32:esp32doit-devkit-v1 --save-prefs" 
+
+    # set preferences
+    # These file commands will not work under windows -- fix -> use the slow method
+    File.foreach("/home/kris/.arduino15/preferences.txt") do |line|
+      if line.match?(/build.path=/)
+        unless line.match?(/build.path=#{buildPath}/)
+          system "arduino --pref build.path=#{buildPath} --board esp32:esp32:esp32doit-devkit-v1 --save-prefs" 
+        end
+        break
+      end
+    
+    #This is probably a better way of doing it but much slower since it has to load java the whole time
+    #currBuildPath = `arduino --get-pref build.path`
+    #unless currBuildPath.match?(/build.path=#{buildPath}/)
+    #  system "arduino --pref build.path=#{buildPath} --board esp32:esp32:esp32doit-devkit-v1 --save-prefs" 
+    #end
+end
   end
 
+  desc 'build the main .ino arduino program'
   task build: %[setBuildPath] do
     # build the main .ino arduino program
     #
@@ -21,18 +38,67 @@ namespace "app" do
     fullPath = Dir.getwd
     dirname = File.basename(fullPath)
     filePath = File.join(fullPath, "Code", "#{dirname}.ino")
-    buildCmd = "arduino --verify #{filePath}"
-
+    buildCmd = "arduino --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v --verify #{filePath}"
+    
+    buildTime = File.mtime("Build")
+    codeTime  = File.mtime("Code")
 
     # exec buildCmd
-    system buildCmd
+    if codeTime > buildTime
+      system buildCmd
+    else
+      puts "Binary is up to date"
+    end
+  end
+
+  desc 'flash the binary to the micro'
+  task flash: %[setBuildPath] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
+    fullPath = Dir.getwd
+    dirname = File.basename(fullPath)
+    filePath = File.join(fullPath, "Code", "#{dirname}.ino")
+    flashCmd = "arduino --upload #{filePath} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v"
+    system flashCmd
+  end
+
+  desc 'flash using esp tool'
+  task esp32flash: [:setBuildPath, :build] do
+    fullPath = Dir.getwd
+    dirname = File.basename(fullPath)
+    filePath = File.join(fullPath, "Build", "#{dirname}")
+    espToolPath = "/home/kris/.arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool.py"
+    espLibPath = "/home/kris/.arduino15/packages/esp32/hardware/esp32/1.0.6/tools"
+    # since this is the tool arduino is using under the hood
+    # This also requires linux to run properly
+
+    flashCmd = <<~STRING.delete("\n")
+      python3 #{espToolPath} --chip esp32 --port /dev/ttyUSB0 --baud 921600 --before default_reset 
+      --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size detect 0xe000 
+      #{espLibPath}/partitions/boot_app0.bin 0x1000 #{espLibPath}/sdk/bin/bootloader_dio_80m.bin 0x10000 
+      #{filePath}.ino.bin 0x8000 #{filePath}.ino.partitions.bin 
+    STRING
+    #This has a lot of extra functionality possibly useful
+    system flashCmd
   end
 end
 
-task :serial do |t|
-  puts t
+namespace "comms" do 
+  desc 'open serial window to the ESP32'
+  task :serial do |t|
+    # screen manual
+    #   -S - set name
+    #   /dev/ttyUSB0 - linux USB port the device is *probably* out of 
+    #   115200 - baudrate of the connection
+    # In Use
+    #   C-a k - kill the screen
+    #   C-a d - deattach the screen
+    # Other Commands
+    #   screen -ls : List existing (detatched screens)
+    #   screen -R : reattach to existing detatched screens
+    exec "screen -S teamSediSensor_ESP32_Prog /dev/ttyUSB0 115200"
+  end
 end
 
+desc 'Remove build directory'
 task :clean do
   FileUtils.rm_rf("Build") 
 end
