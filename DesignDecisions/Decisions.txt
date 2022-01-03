@@ -1,0 +1,154 @@
+6. System Architecture
+6.1 Overall System Behavior
+The overall architecture of the system is an data-logging, sensor node designed for in stream use specificially in the Plaster Creek watershed. The system subcompenents as shown in figure (\d+) include the sensor mechanism, the microcontroller, the power and power supply, the data storage and the data transfer devices. In the spring the device is placed by researchers into the stream where measurements need to be made. Once in place the microcontroller is turned on and controls the behavior of the system. Periodically the microcontroller wakes up, takes a measurement from the sensor, logs the data to memory, and returns to sleep. When the user wants to transfer data off the device they can initiate a bluetooth connection with the device. Through this connection the microcontroller reads the sensor data from memory and sends the data over the bluetooth connection to the user's device. Late in the fall the device is removed by researchers for the winter. While the device is out of the water the device will be serviced. This includes opening the sealed container the device is held in, replacing the battery, reading any data necessary from the device and erasing or replacing the memory to give the device space for the next period in the stream, and re-sealing the device inside the container.
+
+        +---------+    +-------------+
+        | Power   |====| Power Supply|
+        +---------+    +-------------+
+                              ||
+                              ||
+                              ||
+   +-----------+      +-------------+        +--------+
+   |Data Store |======|    Micro    |======= | Sensor |
+   +-----------+      +-------------+        +--------+
+                              ||
+                              ||
+                         +-----------+
+                         | Data Xfer |
+                         +-----------+
+
+        Figure (d+) System Block Diagram
+
+6.2 Electrical Components
+Within the physical hardware there are 6 hardware components. The first is the microcontroller. This component governs the behavior of the system and communicates with all the subsystems to govern their behavior. 
+The second is the optical sensor mechanism. The optical sensor itself has two components, a LED as a light emitter and a phototransistor as a light detector. The current through the phototransistor is changed with the amount of light incident on it. This changes as more light from the LED is reflected off the particles in the water. Thus the higher the current the higher the concentration of particles in the water. The sensor interfaces with the microcontroller through the pins of the micro. The emitter is driven from the GPIO pins of the micro and the detector is powered from a GPIO pin. The current through the device is converted to a voltage which is measured by an ADC pin of the microcontroller. In this way the sensor can be controlled from the microcontoller and data measured. 
+The data storage device is made up of a micro SD card module. The sensor data is stored in the SD card's non-volatile memory so the data will not be lost in the case of a power failure, and can be removed from the device by the user to be transferred to a personal computer for analysis. The memory module is connected to the microcontroller through a SPI interface. When the micro takes a value from the sensor and calculates the data point, it sends the data over SPI to be written to a file on the SD card. 
+The fourth component is the data transfer module. This is what is used to get the data off the device remotely. The transfer is done through an external bluetooth module. This module handles the bluetooth connection with the external device and sending and receiving packets over the connection. The module communicates with the micro over UART. When a connection is initiated with the module the micro begins data transfer. 
+The final component is the power and power supply system. This sub-system component stores power in a battery for the micro to operate and regulates the power supply to come in at the correct voltage. The power is supplied to the micro through the power input pin of the board. From there the micro powers the other components. The microcontroller monitors the power supply unit and should the available power become too low the micro will shut off graciously to maintain functionality. 
+6.3 Mechanical Sub-system
+The mechanical sub-system responsibility is to protect the electrical components. It is made up of a container designed to seal the electrical components inside. This protects the sensitive electrical components from the water. The container also proects the sensor components and positions them at 90 degrees from one another so the light from the LED reflected at 90 degrees off the sediment and particulates will be detected by the phototransistor. It also consists of a separate protected component for the bluetooth antenna. This component is wired to the main container and places the bluetooth module above the water so transmission is possible.
+
+6.4 Software Architecture
+The software will be written in Arduino and consist of different tasks which are run on different interrupts. There is an init task which serves to run when the device is powered on. This task will read the device configuration file, verify all components are working properly, and set up the interrupts for the subsequent tasks. 
+The measurement task is controls taking the data from the sensor. This task will be triggered by a timer interrupt set to go off every fifteen minutes. When the interrupt fires the microcontroller will awake from sleep mode and be set to run the measure task. This task will power on the sensing mechanism and wait for the components to activate. Then it will read the voltage from the phototransistor off the ADC pin and calculate the NTU measurement and TSS measurements from the calibrations it was configured with. Then it will log the results to memory along with a timestamp. When the task is finished the device will reset the timer and return to sleep. 
+The file transfer task will run when a connection is made with the external host requesting data transfer. This will suspend the device operation and begin file transfer to the external device; Once the transfer has completed the device will return to normal operation. 
+
+                              +-----------------+
+                              | Restart/Startup |
+                              +-----------------+
+                                   ||
+                                   ||
+                                   ||
+                                  /   \
+                                /       \
+                              /  restart  \          +--------+
+                              \from fault?/ ==(yes)==|Do what?|
+                                \       /            +--------+
+                                  \  /
+                                   ||
+                                  (no)
+                                   ||
+                             +-----------------------+
+                             | start timers/Init Seq.|
+                             +-----------------------+
+
+      +--------------+                   +--------------+                            +--------------+
+      | Task Measure |                   | Task xfer    |                            | Task config  |
+      |    (15 min)  |                   |  conn. avail |                            |              |
+      +--------------+                   +--------------+                            +--------------+
+             ||                                 ||
+             ||                                 ||
+      +--------------+                   +--------------+
+      | Turn on LED  |                   | Handshake    |
+      +--------------+                   +--------------+
+            ||                                 ||
+      +--------------+                   +--------------+
+      | Read Data    |                   | IF success   |
+      |  from pin    |                   |  else -> end |
+      +--------------+                   +--------------+
+             ||                                 ||
+      +--------------+                   +-----------------------------+
+      | Init mem     |                   | Get Lock on Mem/Block tasks |
+      +--------------+                   +-----------------------------+
+             ||                                 ||
+         +-------+                          +----------------+
+         | Write |                          | begin transfer |  
+         +-------+                          +----------------+
+             ||                                 ||
+      +----------------------+           +----------------------+   
+      | Safely Turn off mem  |           | restart normal op    |
+      +----------------------+           +----------------------+
+             ||                          
+      +---------------+                 
+      | Turn off LED  |                
+      | Turn off Sense|               
+      +---------------+              
+                                   
+(\d+) Overall Mechanical/Module/Container Design
+(\d+).1 Design Criteria
+(\d+).1.1 Sealability
+(\d+).1.2 Accessibility
+(\d+).1.3 Durability
+(\d+).2 Design Alternatives
+(\d+).2.1 Single device staked underwater with antenna above (on stake?)
+(\d+).2.2 Multiple devices: Sensor Underwater wired connection to control box on shore
+(\d+).2.3 Multiple devices: Sensor Underwater wireless connection to control box on shore
+(\d+).3 Design Decisions
+
+(\d+) Light Emitter
+(\d+).1 Design Criteria
+(\d+).2 Design Alternatives
+(\d+).3 Design Decisions
+
+(\d+) Light Sensor
+(\d+).1 Design Criteria
+(\d+).2 Design Alternatives
+(\d+).3 Design Decisions
+
+(\d+) (Microcontroller|SBC|SOC|Dev Board)
+(\d+).1 Design Criteria
+(\d+).1.1 Power Draw
+(\d+).1.2 Necessary Peripherals/Pins
+Right now it appears will need 2 SPI connections/possibly 1 I2C connection
+SPI to Memory, to antenna module, I2C possibly to sensor
+Will it need Bluetooth/cellular builtin to chip then to antenna? 
+(\d+).1.3 Ease to develop on 
+(\d+).1.4 Reputability of Chip/Board Design
+&&I've checked that chips are rated appropriately but are the boards designed for temperature specificaitons&&
+(\d+).1.5 Size (Specifically of board)
+(\d+).1.6 Cost
+(\d+).2 Design Alternatives
+(\d+).2.1 Arduino Uno/Nano (ATmega328p)
+Lowest Power Draw, might not have enough computational power to do bluetooth, also does not have enough required &&I think&& pin outputs
+AVR architecture, base model for Arduino IDE
+(\d+).2.2 Adafruit Feather Board, Sparkfun dev kits(SAMD)
+Higher power draw, Chip reliable easy to implement on, Chip is ARM M0+ (Architecture used on multiple Bluetooth boards)
+Chip has enough pin outputs but will need to double check board itself will have ports
+(\d+).2.3 ESP Boards
+Highest Power Draw also most powerful chip/board. Comes into its own for data transfer connectivity. Might be a good place to start and pare down later
+(\d+).3 Design Decisions
+
+
+(\d+) Data Storage
+(\d+).1 Design Criteria
+(\d+).1.1 Ease of Use (UI)
+(\d+).1.2 Reliability to Environmental Conditions
+(\d+).1.3 Cost
+(\d+).2 Design Alternatives
+(\d+).2.1 MicroSD card
+Large size, very customizeable/replacable, Implements a true filesystem, Easy to Use & Implement
+Power Hungry, Good chips are relatively expensive compared to other options (Good => Withstand Environmental Conditions, reliable)
+&&Concern Chips are fine but I can't find how connectors are designed for temperature swings&&
+Often port can be built onto the SOC itself
+(\d+).2.2 Flash Chip
+Cheaper, Harder to implement => Bare memory will have to implement in software a sort of filesystem for reliability and use
+Harder for End User, Need to implement a way to connect to chip and for chip to read the memory and appear as a file almost
+Smaller Size, Might be built into a chip, Sizes of 1-2MB, Lower power draw
+
+(\d+) Data Transfer
+(\d+) Data Transfer Hardware?
+(\d+) Data Transfer Security / protocol?
+
+(\d+) User Interface?
+(\d+) Power Supply/Battery &&Split these up?&&
+ 
