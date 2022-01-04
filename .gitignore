@@ -2,3 +2,4 @@
 # Don't commit github access token
 /ProjectManagement/token.txt 
 /ProjectManagement/index.js
+/Software/**/Build/*
