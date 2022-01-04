@@ -19,12 +19,12 @@ if OS.windows?
   $OS_Config[:serialPort] = "COM4"
   $OS_Config[:osType] = "Windows"
 elsif OS.mac?
-  $OS_Config[:arduinoCmd] = "arduino"
+  $OS_Config[:arduinoCmd] = "Arduino.app/Contents/MacOS/Arduino"
   $OS_Config[:prefPath] = File.join(File.expand_path("~/Library"), "Arduino15")
   $OS_Config[:serialPort] = "/dev/ttyACM0"
   $OS_Config[:osType] = "Mac"
 else
-  $OS_Config[:arduinoCmd] = "Arduino.app/Contents/MacOS/Arduino"
+  $OS_Config[:arduinoCmd] = "arduino"
   $OS_Config[:prefPath] = File.join(File.expand_path("~"), ".arduino15")
   $OS_Config[:serialPort] = "/dev/ttyUSB0"
   $OS_Config[:osType] = "Linux"
@@ -52,7 +52,7 @@ namespace "app" do
     end
 
     if !foundLine
-      system "#{$OS_Config[:arduinoCmd]} --pref build.path=#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --save-prefs" 
+      system "#{$OS_Config[:arduinoCmd]} --pref build.path=#{$OS_Config[:buildPath]} --board esp32:esp32:esp32doit-devkit-v1 --save-prefs" 
     end
 
     # Set pref with arduino commands
