@@ -76,29 +76,19 @@ namespace "app" do
   end
 
   desc 'build the main .ino arduino program'
-  task build: %w[setBuildPath copyLibs buildCfgFile] do
+  task build: %w[setBuildPath buildCfgFile copyLibs] do
     # build the main .ino arduino program
     # create build cmd string
     # remove -v : verbose for now
     buildCmd = "#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files --verify #{$OS_Config[:filePath]}"
     
-    buildTime = File.mtime($OS_Config[:buildPath])
-    codeTime  = File.mtime($OS_Config[:codePath])
-
     system buildCmd
-    # exec buildCmd
-    #if codeTime > buildTime
-    #  system buildCmd
-    #elsif Dir.empty?($OS_Config[:buildPath])
-    #  system buildCmd
-    #else
-    #  puts "Binary is up to date"
-    #end
   end
 
   desc 'flash the binary to the micro'
-  task flash: %[setBuildPath] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
-    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v"
+  task flash: %w[clean setBuildPath buildCfgFile copyLibs] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
+    # removing -v verbose output
+    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files"
     system flashCmd
   end
 
@@ -147,7 +137,7 @@ namespace "comms" do
     #   C-a d - deattach the screen
     # Other Commands
     #   screen -ls : List existing (detatched screens)
-    #   screen -R : reattach to existing detatched screens
+    #   screen -R : reattach to existing detatched screens - force assumes 1 detached screen to work as expected
     if $OS_Config[:osType].match?("Windows")
       exec "putty -serial #{$OS_Config[:serialPort]} -sercfg 115200"
     else
@@ -174,4 +164,11 @@ end
 
 task build: %[app:build]
 
-task default: %[build]
+task :default do
+  Rake::Task["app:flash"].invoke
+  binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
+  puts binFile
+  if File.exist?(binFile)
+    Rake::Task["comms:serial"].invoke
+  end
+end
