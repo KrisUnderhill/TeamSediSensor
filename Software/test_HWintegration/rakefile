@@ -76,22 +76,24 @@ namespace "app" do
   end
 
   desc 'build the main .ino arduino program'
-  task build: %w[setBuildPath copyLibs] do
+  task build: %w[setBuildPath copyLibs buildCfgFile] do
     # build the main .ino arduino program
     # create build cmd string
-    buildCmd = "#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v --verify #{$OS_Config[:filePath]}"
+    # remove -v : verbose for now
+    buildCmd = "#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files --verify #{$OS_Config[:filePath]}"
     
     buildTime = File.mtime($OS_Config[:buildPath])
     codeTime  = File.mtime($OS_Config[:codePath])
 
+    system buildCmd
     # exec buildCmd
-    if codeTime > buildTime
-      system buildCmd
-    elsif Dir.empty?($OS_Config[:buildPath])
-      system buildCmd
-    else
-      puts "Binary is up to date"
-    end
+    #if codeTime > buildTime
+    #  system buildCmd
+    #elsif Dir.empty?($OS_Config[:buildPath])
+    #  system buildCmd
+    #else
+    #  puts "Binary is up to date"
+    #end
   end
 
   desc 'flash the binary to the micro'
@@ -119,6 +121,17 @@ namespace "app" do
     STRING
     # This has a lot of extra functionality possibly useful
     system flashCmd
+  end
+
+  task :buildCfgFile do
+    t = Time.now
+    cfgLib = File.join($OS_Config[:codePath], "Libs", "Config")
+    puts cfgLib
+    FileUtils.mkdir(cfgLib) unless File.exist?(cfgLib)
+    File.open(File.join(cfgLib, "config.h"), 'w') do |f|
+      f.syswrite("#define TIME_SEC #{t.tv_sec}\n")
+      f.syswrite("#define TIME_USEC #{t.tv_usec}\n")
+    end
   end
 end
 

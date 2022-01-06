@@ -2,6 +2,7 @@
 #define TASK_MEASURE_H_
 
 #include "Arduino.h"
+#include <time.h>
 
 class TaskMeasure {
     public: 
