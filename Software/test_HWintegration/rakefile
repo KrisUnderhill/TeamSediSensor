@@ -81,7 +81,8 @@ namespace "app" do
     # create build cmd string
     # remove -v : verbose for now
     buildCmd = "#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files --verify #{$OS_Config[:filePath]}"
-    
+    binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
+    FileUtils.rm(binFile) if File.exist?(binFile)
     system buildCmd
   end
 
@@ -110,7 +111,8 @@ namespace "app" do
       #{espLibPath}/sdk/bin/bootloader_dio_80m.bin 0x10000 #{binPath}.ino.bin 0x8000 #{binPath}.ino.partitions.bin 
     STRING
     # This has a lot of extra functionality possibly useful
-    system flashCmd
+    binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
+    system flashCmd if File.exist?(binFile)
   end
 
   task :buildCfgFile do
