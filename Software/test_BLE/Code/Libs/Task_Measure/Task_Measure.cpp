@@ -27,7 +27,7 @@ void TaskMeasure::init(){
     settimeofday(&tv, NULL);
 
     /* setup Timers - see timer example*/
-    timer = timerBegin(0, 80, true); /* Timer # 0, 80000 prescaler (us), count-up true */
+    timer = timerBegin(0, 80, true); /* Timer # 0, 80 prescaler (us), count-up true */
     timerAttachInterrupt(timer, &TimerISR, true); /* attach ISR to interrupt */
     timerAlarmWrite(timer, 15000000, true); /* Timer fires every 15,000,000 us (15s), repeat true */
     timerAlarmEnable(timer); /* Enable timer alarms */
@@ -53,18 +53,4 @@ void IRAM_ATTR TaskMeasure::TimerISR(){
   // Give a semaphore that we can check in the loop
   xSemaphoreGiveFromISR(timerSemaphore, NULL);
 }
-
-/*
-
-void loop() {
-  // If Timer has fired
-  if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
-    uint32_t isrCount = 0, isrTime = 0;
-    // Read the interrupt count and time
-    portENTER_CRITICAL(&timerMux);
-    isrCount = isrCounter;
-    isrTime = lastIsrAt;
-    portEXIT_CRITICAL(&timerMux);
-
-*/
 
