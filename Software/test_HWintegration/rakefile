@@ -118,7 +118,6 @@ namespace "app" do
   task :buildCfgFile do
     t = Time.now
     cfgLib = File.join($OS_Config[:codePath], "Libs", "Config")
-    puts cfgLib
     FileUtils.mkdir(cfgLib) unless File.exist?(cfgLib)
     File.open(File.join(cfgLib, "config.h"), 'w') do |f|
       f.syswrite("#define TIME_SEC #{t.tv_sec}\n")
@@ -169,7 +168,6 @@ task build: %[app:build]
 task :default do
   Rake::Task["app:flash"].invoke
   binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
-  puts binFile
   if File.exist?(binFile)
     Rake::Task["comms:serial"].invoke
   end

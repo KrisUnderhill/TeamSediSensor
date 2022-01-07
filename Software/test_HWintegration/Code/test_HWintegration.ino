@@ -6,7 +6,7 @@
 #include "Task_Measure.h"
 
 /* Stupid global vars I can't seem to get rid of yet */
-TaskMeasure taskM = TaskMeasure();
+TaskMeasure taskM;
 
 void setup()
 {    
