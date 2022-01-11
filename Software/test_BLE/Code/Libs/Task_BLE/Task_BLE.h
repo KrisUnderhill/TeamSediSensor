@@ -27,14 +27,14 @@
 
 class TaskBLE {
     public: 
-        void init();
-        void run();
-        void setBuffer(uint8_t* p_newBuffer, size_t len);
+        static void init();
+        static void run();
+        static void setBuffer(uint8_t* p_newBuffer, size_t len);
     private:
-        uint8_t p_msgBuffer[MSG_LEN] = {0};
-        size_t msgBufferLen = 0;
-        BLEServer* pServer = NULL;
-        BLECharacteristic* pCharacteristic = NULL;
+        static uint8_t p_msgBuffer[MSG_LEN];
+        static size_t msgBufferLen;
+        static BLEServer* pServer;
+        static BLECharacteristic* pCharacteristic;
 };
 #endif /* TASK_BLE_H_ */
 

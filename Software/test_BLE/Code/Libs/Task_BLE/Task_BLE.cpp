@@ -18,6 +18,12 @@
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
+uint8_t TaskBLE::p_msgBuffer[MSG_LEN] = {0};
+size_t TaskBLE::msgBufferLen = 0;
+BLEServer* TaskBLE::pServer = NULL;
+BLECharacteristic* TaskBLE::pCharacteristic = NULL;
+
+
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* p_Server) {
         deviceConnected = true;
@@ -64,7 +70,7 @@ void TaskBLE::init(){
   Serial.println("Waiting a client connection to notify...");
   char test[]{"HELLO WORLD"};
 
-  this->setBuffer((uint8_t*)test, strlen(test));
+  TaskBLE::setBuffer((uint8_t*)test, strlen(test));
 }
 
 void TaskBLE::run(){
