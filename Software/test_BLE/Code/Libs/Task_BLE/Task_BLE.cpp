@@ -14,66 +14,70 @@
 #include "Task_BLE.h"
 #include "../Config/config.h" /* Include path for lib */
 
-volatile bool TaskBLE::deviceConnected = false;
-volatile bool TaskBLE::oldDeviceConnected = false;
-
+BLEServer* pServer = NULL;
+BLECharacteristic* pCharacteristic = NULL;
+bool deviceConnected = false;
+bool oldDeviceConnected = false;
+uint32_t value = 0;
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* p_Server) {
-        TaskBLE::deviceConnected = true;
+        deviceConnected = true;
     };
 
     void onDisconnect(BLEServer* p_Server) {
-        TaskBLE::deviceConnected = false;
-    } /* should this be a ; */
+        deviceConnected = false;
+    } 
 };
 
-TaskBLE::TaskBLE(){
-    p_Server = NULL;
-    p_Service = NULL;
-    p_Characteristic = NULL;
-    value = 0x1000000;
-}
-
 void TaskBLE::init(){
-    BLEDevice::init("TSS Sensor");
-    p_Server = BLEDevice::createServer();
-    p_Service = p_Server->createService(SERVICE_UUID);
-    p_Characteristic = p_Service->createCharacteristic(
-                       CHARACTERISTIC_UUID,
-                       BLECharacteristic::PROPERTY_READ   |
-                       BLECharacteristic::PROPERTY_WRITE  |
-                       BLECharacteristic::PROPERTY_NOTIFY |
-                       BLECharacteristic::PROPERTY_INDICATE 
-                      );
+  // Create the BLE Device
+  BLEDevice::init("ESP32");
 
-   p_Characteristic->setValue((uint8_t*)&value, 4);
-   p_Characteristic->addDescriptor(new BLE2902());
+  // Create the BLE Server
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
 
-    p_Service->start();
+  // Create the BLE Service
+  BLEService *pService = pServer->createService(SERVICE_UUID);
 
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERVICE_UUID);
-    pAdvertising->setScanResponse(false);
-    pAdvertising->setMinPreferred(0x0);
-    BLEDevice::startAdvertising();
-    Serial.println("Waiting for a client to notify");
-    Serial.printf("Is device connected? %s\r\n", deviceConnected ? "true" : "false"); 
+  // Create a BLE Characteristic
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE  |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE
+                    );
+
+  // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
+  // Create a BLE Descriptor
+  pCharacteristic->addDescriptor(new BLE2902());
+
+  // Start the service
+  pService->start();
+
+  // Start advertising
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+  BLEDevice::startAdvertising();
+  Serial.println("Waiting a client connection to notify...");
 }
 
 void TaskBLE::run(){
     // notify changed value
     if (deviceConnected) {
-        Serial.println("Connected to device");
-        p_Characteristic->setValue((uint8_t*)&value, 4);
-        p_Characteristic->notify();
+        pCharacteristic->setValue((uint8_t*)&value, 4);
+        pCharacteristic->notify();
         value++;
-        delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        delay(3); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
         delay(500); // give the bluetooth stack the chance to get things ready
-        p_Server->startAdvertising(); // restart advertising
+        pServer->startAdvertising(); // restart advertising
         Serial.println("start advertising");
         oldDeviceConnected = deviceConnected;
     }
