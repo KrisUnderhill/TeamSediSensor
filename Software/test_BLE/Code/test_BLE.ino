@@ -8,7 +8,7 @@
 
 /* Stupid global vars I can't seem to get rid of yet */
 TaskMeasure taskM;
-TaskBLE taskB;
+TaskBLE taskB = TaskBLE();
 
 void setup()
 {    
