@@ -14,6 +14,7 @@
 int TaskMeasure::potReading = 0;
 hw_timer_t * TaskMeasure::timer = NULL;
 volatile SemaphoreHandle_t TaskMeasure::timerSemaphore = xSemaphoreCreateBinary();
+char TaskMeasure::timeCStr[MSG_LEN] = {0};
 
 void TaskMeasure::init(){
     /* setup pins */
@@ -40,8 +41,11 @@ void TaskMeasure::run(){
         potReading = analogRead(POT_PIN);
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
-        Serial.printf("now: %d-%02d-%02d %02d:%02d:%02d\r\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-        Serial.println(potReading);
+        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d", 
+                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
+                tm.tm_hour, tm.tm_min, tm.tm_sec, potReading);
+        Serial.printf("now: %s\r\n", timeCStr);
+        taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr));
         // Wait 
         delay(1000);
         //turn off

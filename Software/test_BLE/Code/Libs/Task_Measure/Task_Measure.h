@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include <time.h>
+#include "../Task_BLE/Task_BLE.h"
 
 class TaskMeasure {
     public: 
@@ -15,6 +16,8 @@ class TaskMeasure {
         static int potReading;
         static hw_timer_t * timer;
         static volatile SemaphoreHandle_t timerSemaphore;
+        static char timeCStr[MSG_LEN];
+        static TaskBLE taskB;
 };
 
 #endif /* TASK_MEASURE_H_ */

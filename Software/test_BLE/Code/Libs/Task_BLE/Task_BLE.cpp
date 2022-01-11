@@ -22,6 +22,7 @@ uint8_t TaskBLE::p_msgBuffer[MSG_LEN] = {0};
 size_t TaskBLE::msgBufferLen = 0;
 BLEServer* TaskBLE::pServer = NULL;
 BLECharacteristic* TaskBLE::pCharacteristic = NULL;
+bool TaskBLE::newVal = false;
 
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -75,10 +76,12 @@ void TaskBLE::init(){
 
 void TaskBLE::run(){
     // notify changed value
-    if (deviceConnected) {
+    if (deviceConnected && newVal) {
         pCharacteristic->setValue(p_msgBuffer, (size_t)msgBufferLen);
         pCharacteristic->notify();
-        delay(100); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        newVal = false;
+        // Note too fast will congest BT stack 
+        //  hoping that the slow speed of task measure will handle this for now
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
@@ -100,4 +103,5 @@ void TaskBLE::setBuffer(uint8_t* p_newBuffer, size_t len){
         memcpy((void*)p_msgBuffer, (const void*)p_newBuffer, len);
         msgBufferLen = len;
     }
+    newVal = true;
 }

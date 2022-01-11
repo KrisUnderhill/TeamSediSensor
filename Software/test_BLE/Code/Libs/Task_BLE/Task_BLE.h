@@ -35,6 +35,7 @@ class TaskBLE {
         static size_t msgBufferLen;
         static BLEServer* pServer;
         static BLECharacteristic* pCharacteristic;
+        static bool newVal;
 };
 #endif /* TASK_BLE_H_ */
 
