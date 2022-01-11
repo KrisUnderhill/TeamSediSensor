@@ -13,6 +13,8 @@
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
+#define MSG_LEN 50
+
 /* bluetoothctl man menu scan
     uuids 4fafc201-1fb5-459e-8fcc-c5c9c331914b beb5483e-36e1-4688-b7f5-ea07361b26a8 (array[strings]) -> filter to only these uuids
     RSSI -50 (int16) -> filter results to only those w/ RSSI (Received signal strength)
@@ -27,6 +29,12 @@ class TaskBLE {
     public: 
         void init();
         void run();
+        void setBuffer(uint8_t* p_newBuffer, size_t len);
+    private:
+        uint8_t p_msgBuffer[MSG_LEN] = {0};
+        size_t msgBufferLen = 0;
+        BLEServer* pServer = NULL;
+        BLECharacteristic* pCharacteristic = NULL;
 };
 #endif /* TASK_BLE_H_ */
 

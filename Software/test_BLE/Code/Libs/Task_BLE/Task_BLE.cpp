@@ -13,12 +13,10 @@
 #include "Arduino.h"
 #include "Task_BLE.h"
 #include "../Config/config.h" /* Include path for lib */
+#include <cstring>
 
-BLEServer* pServer = NULL;
-BLECharacteristic* pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint32_t value = 0;
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* p_Server) {
@@ -44,10 +42,8 @@ void TaskBLE::init(){
   // Create a BLE Characteristic
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID,
-                      BLECharacteristic::PROPERTY_READ   |
-                      BLECharacteristic::PROPERTY_WRITE  |
-                      BLECharacteristic::PROPERTY_NOTIFY |
-                      BLECharacteristic::PROPERTY_INDICATE
+                      BLECharacteristic::PROPERTY_READ  |
+                      BLECharacteristic::PROPERTY_NOTIFY 
                     );
 
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
@@ -61,18 +57,22 @@ void TaskBLE::init(){
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(false);
-  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+  pAdvertising->setMinPreferred(0x00);  // set value to 0x00 to not advertise this parameter
+                                        // I'm guessing some of the linux problems could be fixed 
+                                        // looking into these
   BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
+  char test[]{"HELLO WORLD"};
+
+  this->setBuffer((uint8_t*)test, strlen(test));
 }
 
 void TaskBLE::run(){
     // notify changed value
     if (deviceConnected) {
-        pCharacteristic->setValue((uint8_t*)&value, 4);
+        pCharacteristic->setValue(p_msgBuffer, (size_t)msgBufferLen);
         pCharacteristic->notify();
-        value++;
-        delay(3); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        delay(100); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
@@ -84,6 +84,14 @@ void TaskBLE::run(){
     // connecting
     if (deviceConnected && !oldDeviceConnected) {
         // do stuff here on connecting
+        Serial.println("New Device Connected");
         oldDeviceConnected = deviceConnected;
+    }
+}
+
+void TaskBLE::setBuffer(uint8_t* p_newBuffer, size_t len){
+    if(len > 0 && len < MSG_LEN){
+        memcpy((void*)p_msgBuffer, (const void*)p_newBuffer, len);
+        msgBufferLen = len;
     }
 }
