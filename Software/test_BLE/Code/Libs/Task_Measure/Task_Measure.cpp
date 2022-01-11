@@ -14,6 +14,7 @@
 int TaskMeasure::potReading = 0;
 hw_timer_t * TaskMeasure::timer = NULL;
 volatile SemaphoreHandle_t TaskMeasure::timerSemaphore = xSemaphoreCreateBinary();
+char TaskMeasure::timeCStr[MSG_LEN] = {0};
 
 void TaskMeasure::init(){
     /* setup pins */
@@ -27,7 +28,7 @@ void TaskMeasure::init(){
     settimeofday(&tv, NULL);
 
     /* setup Timers - see timer example*/
-    timer = timerBegin(0, 80, true); /* Timer # 0, 80000 prescaler (us), count-up true */
+    timer = timerBegin(0, 80, true); /* Timer # 0, 80 prescaler (us), count-up true */
     timerAttachInterrupt(timer, &TimerISR, true); /* attach ISR to interrupt */
     timerAlarmWrite(timer, 15000000, true); /* Timer fires every 15,000,000 us (15s), repeat true */
     timerAlarmEnable(timer); /* Enable timer alarms */
@@ -40,8 +41,11 @@ void TaskMeasure::run(){
         potReading = analogRead(POT_PIN);
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
-        Serial.printf("now: %d-%02d-%02d %02d:%02d:%02d\r\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-        Serial.println(potReading);
+        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d", 
+                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
+                tm.tm_hour, tm.tm_min, tm.tm_sec, potReading);
+        Serial.printf("now: %s\r\n", timeCStr);
+        taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr));
         // Wait 
         delay(1000);
         //turn off
@@ -53,18 +57,4 @@ void IRAM_ATTR TaskMeasure::TimerISR(){
   // Give a semaphore that we can check in the loop
   xSemaphoreGiveFromISR(timerSemaphore, NULL);
 }
-
-/*
-
-void loop() {
-  // If Timer has fired
-  if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
-    uint32_t isrCount = 0, isrTime = 0;
-    // Read the interrupt count and time
-    portENTER_CRITICAL(&timerMux);
-    isrCount = isrCounter;
-    isrTime = lastIsrAt;
-    portEXIT_CRITICAL(&timerMux);
-
-*/
 

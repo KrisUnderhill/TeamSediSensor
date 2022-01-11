@@ -1,0 +1,7 @@
+So I've figured out that this example works with a BLE app on my iPhone
+It works with bluetoothctl on both my raspberry pi's 
+It does not work with my linux laptop - no ideas why as far as I can tell there's a bug with bluez/bluetoothctl
+    No specific forum examples dealing with this but a lot that show weird behavior 
+    Alternately it could be they are configured slightly differently and timing out before file descriptor is 
+    realized idk 
+For reference read/write commands are identified?
