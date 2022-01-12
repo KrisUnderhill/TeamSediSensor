@@ -99,8 +99,8 @@ namespace "app" do
 
   desc 'flash the binary to the micro'
   task flash: %w[clean setBuildPath autoGenFiles copyLibs] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
-    # adding -v verbose output
-    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v"
+    # removing -v verbose output
+    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files"
     system flashCmd
   end
 
@@ -135,7 +135,8 @@ namespace "app" do
     file = <<~EOF
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
-      #define FORMAT_FFAT true
+      #define FORMAT_FFAT false
+      #define DATA_FILE_NAME "/data.csv"
     EOF
     File.write(File.join(cfgLib, "config.h"), file)
   end

@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include <time.h>
 #include "../Task_BLE/Task_BLE.h"
+#include "../PS_FFat/PS_FFat.h"
 
 class TaskMeasure {
     public: 
@@ -18,6 +19,7 @@ class TaskMeasure {
         static volatile SemaphoreHandle_t timerSemaphore;
         static char timeCStr[BLE_MSG_LEN];
         static TaskBLE taskB;
+        static PS_FFat files;
 };
 
 #endif /* TASK_MEASURE_H_ */

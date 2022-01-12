@@ -41,11 +41,13 @@ void TaskMeasure::run(){
         potReading = analogRead(POT_PIN);
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
-        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d", 
+        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d\r\n", 
                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                 tm.tm_hour, tm.tm_min, tm.tm_sec, potReading);
-        Serial.printf("now: %s\r\n", timeCStr);
-        taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr));
+        Serial.printf("now: %s", timeCStr);
+        taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr)-2); /* -2 : I don't want the \r\n char or the \0 end */
+        files.setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
+        
         // Wait 
         delay(1000);
         //turn off
