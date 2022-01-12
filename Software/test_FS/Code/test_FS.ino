@@ -14,6 +14,7 @@ PS_FFat ps_fs;
 
 void setup()
 {    
+    delay(1000);
     Serial.begin(115200);
     ps_fs.init();
     //taskM.init();
@@ -24,5 +25,7 @@ void loop()
 {
     //taskM.run();
     //taskB.run();
+    Serial.println("Well at least it's looping?");
+    delay(1500);
 }
 

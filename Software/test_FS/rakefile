@@ -41,22 +41,20 @@ end
 
 namespace "app" do
 
-  desc 'Copy library folders to expected Arduino Path'
+  #desc 'Copy library folders to expected Arduino Path'
   task :copyLibs do
     FileUtils.cp_r(Dir.glob("Code/Libs/*"), $OS_Config[:libPath])
   end
 
   desc 'Open project in arduino IDE after copying'
-  task openIDE: %w[buildCfgFile copyLibs] do
+  task openIDE: %w[autoGenFiles copyLibs] do
     ideFileDir = File.join($OS_Config[:idePath], $OS_Config[:dirName])
-    unless File.exist? ideFileDir
-      FileUtils.mkdir(ideFileDir)
-    end
+    FileUtils.mkdir(ideFileDir) unless File.exist? ideFileDir
     FileUtils.cp(File.join("Code", "#{$OS_Config[:dirName]}.ino"), File.join(ideFileDir, "#{$OS_Config[:dirName]}.ino"))
     `#{$OS_Config[:arduinoCmd]} #{File.join(ideFileDir, "#{$OS_Config[:dirName]}.ino")} &`
   end
 
-  desc 'create build directory if it does not exist already'
+  #desc 'create build directory if it does not exist already'
   task :setBuildPath do
     unless Dir.exist?("Build")
       Dir.mkdir("Build")
@@ -89,7 +87,7 @@ namespace "app" do
   end
 
   desc 'build the main .ino arduino program'
-  task build: %w[setBuildPath buildCfgFile copyLibs] do
+  task build: %w[setBuildPath autoGenFiles copyLibs] do
     # build the main .ino arduino program
     # create build cmd string
     # remove -v : verbose for now
@@ -100,9 +98,9 @@ namespace "app" do
   end
 
   desc 'flash the binary to the micro'
-  task flash: %w[clean setBuildPath buildCfgFile copyLibs] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
-    # removing -v verbose output
-    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files"
+  task flash: %w[clean setBuildPath autoGenFiles copyLibs] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
+    # adding -v verbose output
+    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v"
     system flashCmd
   end
 
@@ -128,15 +126,30 @@ namespace "app" do
     system flashCmd if File.exist?(binFile)
   end
 
-  task :buildCfgFile do
+  task autoGenFiles: %w[cfgFile partitionTable]
+
+  task :cfgFile do
     t = Time.now
     cfgLib = File.join($OS_Config[:codePath], "Libs", "Config")
     FileUtils.mkdir(cfgLib) unless File.exist?(cfgLib)
-    File.open(File.join(cfgLib, "config.h"), 'w') do |f|
-      f.syswrite("#define TIME_SEC #{t.tv_sec}\n")
-      f.syswrite("#define TIME_USEC #{t.tv_usec}\n")
-      f.syswrite("#define FORMAT_FFAT true")
-    end
+    file = <<~EOF
+      #define TIME_SEC #{t.tv_sec}
+      #define TIME_USEC #{t.tv_usec}
+      #define FORMAT_FFAT true
+    EOF
+    File.write(File.join(cfgLib, "config.h"), file)
+  end
+
+  task :partitionTable do
+    file = <<~EOF
+      # Name,   Type, SubType, Offset,  Size, Flags
+      nvs,      data, nvs,     0x9000,  0x5000,
+      otadata,  data, ota,     0xe000,  0x2000,
+      app0,     app,  ota_0,   0x10000, 0x140000,
+      app1,     app,  ota_1,   0x150000,0x140000,
+      ffat,     data, fat,     0x290000,0x170000,
+    EOF
+    File.write(File.join($OS_Config[:buildPath], "partitions.csv"),file)
   end
 end
 

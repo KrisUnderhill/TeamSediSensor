@@ -2,7 +2,11 @@
 #include "PS_FFat.h"
 
 void PS_FFat::init(){
-    if (FORMAT_FFAT) FFat.format();
+    if(FORMAT_FFAT) 
+    {   
+        Serial.println(FORMAT_FFAT);
+        FFat.format();
+    }
     if(!FFat.begin()){
         Serial.println("FFat Mount Failed");
         return;
