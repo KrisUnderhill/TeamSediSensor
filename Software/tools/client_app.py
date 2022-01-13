@@ -43,14 +43,16 @@ class Discovery:
             self.devices[path] = device_properties
             dev = self.devices[path]
             if(self.verbose):
-                print("NEW path  :", path)
-                if 'Address' in dev:
-                    print("NEW bdaddr: ", bluetooth_utils.dbus_to_python(dev['Address']))
-                if 'Name' in dev:
-                    print("NEW name  : ", bluetooth_utils.dbus_to_python(dev['Name']))
-                if 'RSSI' in dev:
-                    print("NEW RSSI  : ", bluetooth_utils.dbus_to_python(dev['RSSI']))
-            print("------------------------------")
+                if( ('Name' in dev and self.pattern.match(bluetooth_utils.dbus_to_python(dev['Name']))) or 
+                        ('Address' in dev and self.pattern.match(bluetooth_utils.dbus_to_python(dev['Address']))) ):
+                    print("NEW path  :", path)
+                    if 'Address' in dev:
+                        print("NEW bdaddr: ", bluetooth_utils.dbus_to_python(dev['Address']))
+                    if 'Name' in dev:
+                        print("NEW name  : ", bluetooth_utils.dbus_to_python(dev['Name']))
+                    if 'RSSI' in dev:
+                        print("NEW RSSI  : ", bluetooth_utils.dbus_to_python(dev['RSSI']))
+                    print("------------------------------")
     
     def interfaces_removed(self, path, interfaces):
         # interfaces is an array of dictionary strings in this signal
@@ -58,11 +60,15 @@ class Discovery:
             return
         if path in self.devices:
             dev = self.devices[path]
-            if 'Address' in dev:
-                print("DEL bdaddr: ", bluetooth_utils.dbus_to_python(dev['Address']))
-            else:
-                print("DEL path  : ", path)
-                print("------------------------------")
+            if(self.verbose):
+                if( ('Name' in dev and self.pattern.match(bluetooth_utils.dbus_to_python(dev['Name']))) or 
+                    ('Address' in dev and self.pattern.match(bluetooth_utils.dbus_to_python(dev['Address']))) ):
+                    if 'Address' in dev:
+        
+                        print("DEL bdaddr: ", bluetooth_utils.dbus_to_python(dev['Address']))
+                    else:
+                        print("DEL path  : ", path)
+                        print("------------------------------")
             del self.devices[path]
     
     
@@ -76,14 +82,17 @@ class Discovery:
             self.devices[path] = changed
     
         dev = self.devices[path]
-        print("CHG path  :", path)
-        if 'Address' in dev:
-            print("CHG bdaddr: ", bluetooth_utils.dbus_to_python(dev['Address']))
-        if 'Name' in dev:
-            print("CHG name  : ", bluetooth_utils.dbus_to_python(dev['Name']))
-        if 'RSSI' in dev:
-            print("CHG RSSI  : ", bluetooth_utils.dbus_to_python(dev['RSSI']))
-        print("------------------------------")
+        if(self.verbose):
+            if( ('Name' in dev and self.pattern.match(bluetooth_utils.dbus_to_python(dev['Name']))) or 
+                ('Address' in dev and self.pattern.match(bluetooth_utils.dbus_to_python(dev['Address']))) ):
+                print("CHG path  :", path)
+                if 'Address' in dev:
+                    print("CHG bdaddr: ", bluetooth_utils.dbus_to_python(dev['Address']))
+                if 'Name' in dev:
+                    print("CHG name  : ", bluetooth_utils.dbus_to_python(dev['Name']))
+                if 'RSSI' in dev:
+                    print("CHG RSSI  : ", bluetooth_utils.dbus_to_python(dev['RSSI']))
+                print("------------------------------")
     
     def get_known_devices(self, bus):
         object_manager = dbus.Interface(bus.get_object(bluetooth_constants.BLUEZ_SERVICE_NAME, "/"), bluetooth_constants.DBUS_OM_IFACE)
@@ -93,16 +102,19 @@ class Discovery:
             for iface_name in ifaces:
                 if iface_name == bluetooth_constants.DEVICE_INTERFACE:
                     self.managed_objects_found += 1
-                    print("EXI path  : ", path)
                     device_properties = ifaces[bluetooth_constants.DEVICE_INTERFACE]
                     self.devices[path] = device_properties
-                    if 'Address' in device_properties:
-                        print("EXI bdaddr: ", bluetooth_utils.dbus_to_python(device_properties['Address']))
-                    if 'Name' in device_properties:
-                        print("EXI name: ", bluetooth_utils.dbus_to_python(device_properties['Name']))
-                    if 'Connected' in device_properties:
-                        print("EXI cncted: ", bluetooth_utils.dbus_to_python(device_properties['Connected']))           
-                    print("------------------------------")
+                    if(self.verbose):
+                        if( ('Name' in device_properties and self.pattern.match(bluetooth_utils.dbus_to_python(device_properties['Name']))) or 
+                            ('Address' in device_properties and self.pattern.match(bluetooth_utils.dbus_to_python(device_properties['Address']))) ):
+                            print("EXI path  : ", path)
+                            if 'Address' in device_properties:
+                                print("EXI bdaddr: ", bluetooth_utils.dbus_to_python(device_properties['Address']))
+                            if 'Name' in device_properties:
+                                print("EXI name: ", bluetooth_utils.dbus_to_python(device_properties['Name']))
+                            if 'Connected' in device_properties:
+                                print("EXI cncted: ", bluetooth_utils.dbus_to_python(device_properties['Connected']))           
+                            print("------------------------------")
                 
     def discovery_timeout(self):
         GLib.source_remove(self.timer_id)
@@ -167,7 +179,7 @@ if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
 
-    Disc = Discovery();
+    Disc = Discovery(verbose = False, re_pattern = "ESP32");
     
     # ask for a list of devices already known to the BlueZ daemon
     print("Listing devices already known to BlueZ:")
