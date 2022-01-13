@@ -99,6 +99,76 @@ class Connection:
         else:
             return bluetooth_constants.RESULT_ERR_NOT_FOUND
 
+    def service_discovery_completed(self):
+        bus.remove_signal_receiver(interfaces_added,"InterfacesAdded")
+        bus.remove_signal_receiver(properties_changed,"PropertiesChanged")
+        mainloop.quit()
+        
+    def properties_changed(self, interface, changed, invalidated, path):
+        global device_path
+        if path != device_path:
+            return
+    
+        if 'ServicesResolved' in changed:
+            sr = bluetooth_utils.dbus_to_python(changed['ServicesResolved'])
+            print("ServicesResolved  : ", sr)
+            if sr == True:
+                self.service_discovery_completed()
+            
+    def interfaces_added(self, path, interfaces):
+        global found_ts
+        global found_tc
+        global ts_path
+        global tc_path
+        if bluetooth_constants.GATT_SERVICE_INTERFACE in interfaces:
+            properties = interfaces[bluetooth_constants.GATT_SERVICE_INTERFACE]
+            print("--------------------------------------------------------------------------------")
+            print("SVC path   :", path)
+            if 'UUID' in properties:
+                uuid = properties['UUID']
+                if uuid == bluetooth_constants.TEMPERATURE_SVC_UUID:
+                    found_ts = True
+                    ts_path = path
+                print("SVC UUID   : ", bluetooth_utils.dbus_to_python(uuid))
+                print("SVC name   : ", bluetooth_utils.get_name_from_uuid(uuid))
+            return
+    
+        if bluetooth_constants.GATT_CHARACTERISTIC_INTERFACE in interfaces:
+            properties = interfaces[bluetooth_constants.GATT_CHARACTERISTIC_INTERFACE]
+            print("  CHR path   :", path)
+            if 'UUID' in properties:
+                uuid = properties['UUID']
+                if uuid == bluetooth_constants.TEMPERATURE_CHR_UUID:
+                    found_tc = True
+                    tc_path = path
+                print("  CHR UUID   : ", bluetooth_utils.dbus_to_python(uuid))
+                print("  CHR name   : ", bluetooth_utils.get_name_from_uuid(uuid))
+                flags  = ""
+                for flag in properties['Flags']:
+                    flags = flags + flag + ","
+                print("  CHR flags  : ", flags)
+            return
+        
+        if bluetooth_constants.GATT_DESCRIPTOR_INTERFACE in interfaces:
+            properties = interfaces[bluetooth_constants.GATT_DESCRIPTOR_INTERFACE]
+            print("    DSC path   :", path)
+            if 'UUID' in properties:
+                uuid = properties['UUID']
+                print("    DSC UUID   : ", bluetooth_utils.dbus_to_python(uuid))
+                print("    DSC name   : ", bluetooth_utils.get_name_from_uuid(uuid))
+            return
+    def discoverServices(self):
+        if self.connected:
+            self.bus.add_signal_receiver(interfaces_added,
+                dbus_interface = bluetooth_constants.DBUS_OM_IFACE,
+                signal_name = "InterfacesAdded")
+            bus.add_signal_receiver(properties_changed,
+                dbus_interface = bluetooth_constants.DBUS_PROPERTIES,
+                signal_name = "PropertiesChanged",
+                path_keyword = "path")
+            mainloop = GLib.MainLoop() 
+            mainloop.run()
+
 if __name__ == "__main__":
     conn = Connection(True, 'ESP32')
     print(bool(conn.is_connected_other()))
