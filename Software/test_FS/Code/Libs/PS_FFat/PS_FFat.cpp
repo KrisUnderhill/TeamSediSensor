@@ -14,7 +14,7 @@ void PS_FFat::init(){
         Serial.println("FFat Mount Failed");
         return;
     }
-    PS_FFat::writeFile(FFat, (const char *)DATA_FILE_NAME, "#time, ADC Voltage,");
+    PS_FFat::writeFile(FFat, (const char *)DATA_FILE_NAME, "#time, ADC Voltage,\n");
 }
 
 void PS_FFat::recvBuffer(char* p_destBuffer, size_t* len){
@@ -48,8 +48,15 @@ void PS_FFat::readFile(fs::FS &fs, const char * path){
     }
 
     Serial.println("- read from file:");
+    char readChar;
+    size_t len = 1;
     while(file.available()){
-        Serial.write(file.read());
+        file.readBytes(&readChar, len);
+        if(readChar == '\n') {
+            Serial.print("\r\n");
+        } else {
+            Serial.print(readChar);
+        }
     }
     file.close();
 }
