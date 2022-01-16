@@ -9,11 +9,6 @@
 
 #define BACKSPACE 0x7F
 
-/* Stupid global vars I can't seem to get rid of yet */
-TaskMeasure taskM;
-TaskBLE taskB;
-PS_FFat ps_fs;
-
 std::string inputString = "";
 bool stringComplete = false;
 
@@ -21,18 +16,16 @@ void setup()
 {    
     delay(1000);
     Serial.begin(115200);
-    ps_fs.init();
-    taskM.init();
-    taskB.init();
+    PS_FFat::init();
+    TaskBLE::init();
 }
 
 void loop()
 {
-    taskM.run();
-    taskB.run();
+    TaskBLE::run();
     if(stringComplete){
         if(inputString == "readData"){
-            ps_fs.readDataFile();
+            PS_FFat::readDataFile();
         }
         inputString = "";
         stringComplete = false;

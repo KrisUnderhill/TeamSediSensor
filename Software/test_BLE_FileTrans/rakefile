@@ -137,7 +137,7 @@ namespace "app" do
     file = <<~EOF
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
-      #define FORMAT_FFAT false
+      #define FORMAT_FFAT true
       #define DATA_FILE_NAME "/data.csv"
       #define SERVICE_UUID "#{suuid}"
     EOF

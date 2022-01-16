@@ -7,6 +7,7 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include "../Config/config.h"
+#include "../PS_FFat/PS_FFat.h"
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -28,18 +29,28 @@
     * Calling any without parameter gives its values
 */
 
+typedef enum bufferIdentification {SERIAL_BUF, FILE_XFER_BUF} buf_ID;
+
 class TaskBLE {
     public: 
         static void init();
         static void run();
-        static void setBuffer(uint8_t* p_newBuffer, size_t len);
+        static void setBuffer(buf_ID bufferID, uint8_t* p_newBuffer, size_t len);
     private:
-        static uint8_t p_msgBuffer[BLE_MSG_LEN];
-        static size_t msgBufferLen;
+        friend class startIndicateOnRead;
+        friend class FT_Callbacks;
+        static uint8_t p_serialBuffer[BLE_MSG_LEN];
+        static size_t serialBufferLen;
+        static uint8_t p_fileXferBuffer[BLE_MSG_LEN];
+        static size_t fileXferBufferLen;
+        static size_t offset;
+        static size_t full_fileSize;
         static BLEServer* pServer;
         static BLECharacteristic* pCharacteristic;
         static BLECharacteristic* p_ftCharacteristic;
         static bool newVal;
+        static volatile bool startFT;
+        static volatile bool newIndicate;
 };
 #endif /* TASK_BLE_H_ */
 

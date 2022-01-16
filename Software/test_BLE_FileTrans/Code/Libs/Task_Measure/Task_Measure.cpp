@@ -45,7 +45,7 @@ void TaskMeasure::run(){
                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                 tm.tm_hour, tm.tm_min, tm.tm_sec, potReading);
         Serial.printf("now: %s\r", timeCStr);
-        taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr)-1); /* -1 : I don't want the \n char or the \0 end */
+        taskB.setBuffer(SERIAL_BUF, (uint8_t*)timeCStr, strlen(timeCStr)-1); /* -1 : I don't want the \n char or the \0 end */
         files.setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
         
         // Wait 
