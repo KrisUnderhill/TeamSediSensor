@@ -133,5 +133,12 @@ void PS_FFat::writeTestFile(){
     if(FORMAT_FFAT){
         PS_FFat::writeFile(FFat, "/testFile.txt", test_file_text);
     }
+    File file = FFat.open("/testFile.txt", FILE_READ);
+    size_t fileSize = file.size();
+    file.close();
+    Serial.println(fileSize);
+    char output[33];
+    getmd5Sum(output, "/testFile.txt");
+    Serial.println(output);
 }
 

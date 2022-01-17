@@ -43,6 +43,7 @@ class startIndicateOnRead: public BLEDescriptorCallbacks {
 	void onWrite(BLEDescriptor* pDescriptor){
         /* This callback is called whenever the descriptor is read 
          *   when Linux requests notifications/indications it reads the descriptor
+         *   Verified for Linux nothing else
          *   Hence start sending indications on this act 
          */
         TaskBLE::startFT = true;
@@ -114,9 +115,6 @@ void TaskBLE::init(){
     // Start the service
     pService->start();
 
-    PS_FFat::initializeFileBuffer(p_fileXferBuffer, &fileXferBufferLen); 
-    p_ftCharacteristic->setValue(p_fileXferBuffer, fileXferBufferLen);
-
     // Start advertising
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
@@ -144,24 +142,33 @@ void TaskBLE::run(){
     }
     // connecting
     if (deviceConnected && !oldDeviceConnected) {
+        PS_FFat::initializeFileBuffer(p_fileXferBuffer, &fileXferBufferLen); 
+        p_ftCharacteristic->setValue(p_fileXferBuffer, fileXferBufferLen);
+
         // do stuff here on connecting
         Serial.println("New Device Connected");
         oldDeviceConnected = deviceConnected;
     }
 
     if(startFT) {
+        Serial.printf("File Header: %s\r\n", p_fileXferBuffer);
         p_ftCharacteristic->indicate();
         full_fileSize = p_fileXferBuffer[16] + (p_fileXferBuffer[17] << 8);
+        startFT = false;
     }
     if(newIndicate){
         if(offset == full_fileSize) {
+            PS_FFat::initializeFileBuffer(p_fileXferBuffer, &fileXferBufferLen); 
+            p_ftCharacteristic->setValue(p_fileXferBuffer, fileXferBufferLen);
+
             Serial.println("File Xfer Complete");
         } else {
+            Serial.printf("offset: %d, full fileSize: %d, text: %s, len: %d\r\n", offset, full_fileSize, p_fileXferBuffer, fileXferBufferLen);
+            fileXferBufferLen = BLE_MSG_LEN;
             PS_FFat::recvBuffer(p_fileXferBuffer, &fileXferBufferLen, &offset);
             p_ftCharacteristic->setValue(p_fileXferBuffer, fileXferBufferLen);
             p_ftCharacteristic->indicate();
         }
-
         newIndicate = false;
     }
 }
