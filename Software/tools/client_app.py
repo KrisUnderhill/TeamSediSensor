@@ -103,7 +103,6 @@ class Connection:
             try:
                 value = char_interface.ReadValue({})
             except Exception as e:
-                print("Failed to read temperature")
                 print(e.get_dbus_name())
                 print(e.get_dbus_message())
                 return bluetooth_constants.RESULT_EXCEPTION
@@ -111,13 +110,8 @@ class Connection:
                 print(value)
                 return value
 
-    def value_received(self, interface, changed, invalidated, path):
-        print("HI FROM ISR")
-        if 'Value' in changed:
-            value = bluetooth_utils.dbus_to_python(changed['Value'])
-            print(value)
 
-    def start_notifications_uuid(self, uuid):
+    def start_notifications_uuid(self, uuid, callback):
         path = self.get_path_uuid(uuid)
         print(path)
         if path != None:
@@ -133,7 +127,7 @@ class Connection:
                 path_keyword = "path")
 
     
-            self.bus.add_signal_receiver(self.value_received,
+            self.bus.add_signal_receiver(callback,
                 dbus_interface = bluetooth_constants.DBUS_PROPERTIES,
                 signal_name = "PropertiesChanged",
                 path = path,
@@ -153,6 +147,13 @@ class Connection:
                 self.mainloop.run()
                 return bluetooth_constants.RESULT_OK
 
+    def stop_notifications_uuid(self, uuid, callback):
+        path = self.get_path_uuid(uuid)
+        if path != None:
+            self.bus.remove_signal_receiver(self.interfaces_added,"InterfacesAdded")
+            self.bus.remove_signal_receiver(self.properties_changed,"PropertiesChanged")
+            self.bus.remove_signal_receiver(callback, "PropertiesChanged")
+            self.mainloop.quit()
 
     def write_text_uuid(self, uuid, text):
         path = self.get_path_uuid(uuid)
@@ -296,8 +297,47 @@ class Connection:
             self.mainloop.run()
 
 if __name__ == "__main__":
+    first = True
+    stop = False
+    f = open("testOutput.txt", 'wb')
+    totalBytes = 0
+    receivedBytes = 0
+    wholeString = ''
+    fileHash = 0
 
     conn = Connection(True, 'ESP32')
+    #uuid = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
+    uuid = "b1d3c2c4-7553-11ec-90d6-0242ac120003"
+
+
+    def value_received(interface, changed, invalidated, path):
+        global first
+        global f
+        global totalBytes
+        global receivedBytes
+        global wholeString
+        global fileHash
+        global conn
+        global uuid
+        if 'Value' in changed:
+            value = bluetooth_utils.dbus_to_python(changed['Value'])
+            print(value)
+            if first:
+                first = False
+                fileHash = bytearray(value[0:16])
+                print(len(value))
+                totalBytes = value[16] + (value[17] << 8)
+                print(fileHash)
+                print(totalBytes)
+            elif stop:
+                conn.stopNotify(uuid, value_received)
+                conn.disconnect()
+            else:
+                newBytes = bytearray(value)
+                receivedBytes += (len(value)-1)
+                print(newBytes.decode('utf-8'))
+                f.write(newBytes)
+
     print(bool(conn.is_connected_other()))
     
     if conn.is_connected_other():
@@ -307,9 +347,8 @@ if __name__ == "__main__":
     print("Connecting to " + conn.pattern)
     conn.connect()
     conn.discoverServices();
-    uuid = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
     #conn.read_from_uuid(uuid)
-    conn.start_notifications_uuid(uuid)
+    conn.start_notifications_uuid(uuid, value_received)
 
     time.sleep(5)
     print("Disconnecting from " + conn.bdaddr)
