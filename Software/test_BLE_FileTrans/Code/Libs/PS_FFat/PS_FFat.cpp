@@ -9,6 +9,11 @@
 char PS_FFat::p_fileBuffer[FILE_BUF_LEN] = {0};
 size_t PS_FFat::fileBufferLen = 0;
 
+struct fileXferHeader {
+    uint8_t md5sum[16];
+    size_t fileSize;
+};
+
 void PS_FFat::init(){
     if(FORMAT_FFAT) FFat.format();
     if(!FFat.begin()){
@@ -19,22 +24,18 @@ void PS_FFat::init(){
 }
 
 void PS_FFat::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
+    struct fileXferHeader* header = (struct fileXferHeader*) BLEfileBuffer;
     File file = FFat.open("/testFile.txt", FILE_READ);
     MD5Builder md5;
     md5.begin();
     size_t maxLen = file.size();
-    Serial.println(maxLen);
     md5.addStream(file, (const size_t)maxLen);
     md5.calculate();
-    md5.getBytes(BLEfileBuffer);
+    md5.getBytes(header->md5sum);
     char output[33] = {0}; 
     md5.getChars(output);
-    Serial.println(output);
-    *BLEfileBufferLen = 16; /* read in 16 bytes for checksum */
-    BLEfileBuffer[*BLEfileBufferLen] = maxLen & (0xFF); /* Lower Byte */
-    (*BLEfileBufferLen)++;
-    BLEfileBuffer[*BLEfileBufferLen] = maxLen & (0xFF << 8); /* Upper Byte */
-    (*BLEfileBufferLen)++;
+    header->fileSize = maxLen;
+    *BLEfileBufferLen = sizeof(*header);
     file.close();
 }
 

@@ -8,12 +8,7 @@
 #include <BLE2902.h>
 #include "../Config/config.h"
 #include "../PS_FFat/PS_FFat.h"
-
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
-
-
-#define BLE_MSG_LEN 500
+#include "../PS_FileXferService/PS_FileXferService.h"
 
 /* bluetoothctl man menu scan
     uuids 4fafc201-1fb5-459e-8fcc-c5c9c331914b beb5483e-36e1-4688-b7f5-ea07361b26a8 (array[strings]) -> filter to only these uuids
@@ -25,28 +20,17 @@
     * Calling any without parameter gives its values
 */
 
-typedef enum bufferIdentification {SERIAL_BUF, FILE_XFER_BUF} buf_ID;
-
 class TaskBLE {
     public: 
         static void init();
         static void run();
-        static void setBuffer(buf_ID bufferID, uint8_t* p_newBuffer, size_t len);
+        static void setBuffer(uint8_t* p_newBuffer, size_t len);
     private:
-        friend class startIndicateOnRead;
-        friend class FT_Callbacks;
         static uint8_t p_serialBuffer[BLE_MSG_LEN];
         static size_t serialBufferLen;
-        static uint8_t p_fileXferBuffer[BLE_MSG_LEN];
-        static size_t fileXferBufferLen;
-        static size_t offset;
-        static size_t full_fileSize;
-        static BLEServer* pServer;
+        static BLEServer* p_server;
         static BLECharacteristic* pCharacteristic;
-        static BLECharacteristic* p_ftCharacteristic;
         static bool newVal;
-        static volatile bool startFT;
-        static volatile bool newIndicate;
 };
 #endif /* TASK_BLE_H_ */
 
