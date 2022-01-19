@@ -9,6 +9,7 @@ import dbus
 import time
 import sys
 import re
+import hashlib
 
 import bluetooth_utils
 import bluetooth_constants
@@ -163,7 +164,6 @@ class Connection:
             ascii = bluetooth_utils.text_to_ascii_array(text)
             value = char_interface.WriteValue(ascii, {})
         except Exception as e:
-            print("Failed to write to LED Text")
             print(e.get_dbus_name())
             print(e.get_dbus_message())
             return bluetooth_constants.RESULT_EXCEPTION
@@ -296,61 +296,110 @@ class Connection:
             self.mainloop = GLib.MainLoop() 
             self.mainloop.run()
 
-if __name__ == "__main__":
-    first = True
-    stop = False
-    f = open("testOutput.txt", 'wb')
-    totalBytes = 0
-    receivedBytes = 0
-    wholeString = ''
-    fileHash = 0
-
-    conn = Connection(True, 'ESP32')
-    #uuid = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
-    uuid = "b1d3c2c4-7553-11ec-90d6-0242ac120003"
-
-
-    def value_received(interface, changed, invalidated, path):
-        global first
-        global f
-        global totalBytes
-        global receivedBytes
-        global wholeString
-        global fileHash
-        global conn
-        global uuid
-        if 'Value' in changed:
-            value = bluetooth_utils.dbus_to_python(changed['Value'])
-            print(value)
-            if first:
-                first = False
-                fileHash = bytearray(value[0:16])
-                print(len(value))
-                totalBytes = value[16] + (value[17] << 8)
-                print(fileHash)
-                print(totalBytes)
-            elif stop:
-                conn.stopNotify(uuid, value_received)
-                conn.disconnect()
+def convertHashtoStr(md5hash):
+    hashStr = ''
+    for i in range(len(md5hash)):
+        byte = md5hash[i]
+        for mask in [0xf0, 0xf]:
+            char = byte & mask
+            if char > 0xf:
+                char = char >> 4
+            if char > 0x9:
+                if   char == 0xa:
+                    hashStr += 'a'
+                elif char == 0xb:
+                    hashStr += 'b'
+                elif char == 0xc:
+                    hashStr += 'c'
+                elif char == 0xd:
+                    hashStr += 'd'
+                elif char == 0xe:
+                    hashStr += 'e'
+                elif char == 0xf:
+                    hashStr += 'f'
+                else:
+                    print("\n\nWTF\n")
             else:
-                newBytes = bytearray(value)
-                receivedBytes += (len(value)-1)
-                print(newBytes.decode('utf-8'))
-                f.write(newBytes)
+                hashStr += str(char)
+    return hashStr
 
-    print(bool(conn.is_connected_other()))
+def checkHash(hashRecvd, filename):
+    with open(filename, "r") as f:  
+        list_text = f.readlines()
     
-    if conn.is_connected_other():
-        print("Sorry - something is already connected to device " + conn.bdaddr)
-        sys.exit(1)
-        
-    print("Connecting to " + conn.pattern)
-    conn.connect()
-    conn.discoverServices();
-    #conn.read_from_uuid(uuid)
-    conn.start_notifications_uuid(uuid, value_received)
+    test_file_text = ''
+    test_file_text = test_file_text.join(list_text);
+    
+    hash_object = hashlib.md5(test_file_text.encode())
+    md5_hash = hash_object.hexdigest()
+    
+    print(f"Hash Expected: {hashRecvd}")
+    print(f"Hash Received: {md5_hash}")
+    if hashRecvd == md5_hash:
+        print("File Transfer Success")
+    else:
+        print("File Transfer Failed")
 
-    time.sleep(5)
-    print("Disconnecting from " + conn.bdaddr)
-    conn.disconnect()
+if __name__ == "__main__":
+    try:
+        first = True
+        f = open("testOutput.txt", 'wb')
+        totalBytes = 0
+        receivedBytes = 0
+        wholeString = ''
+        fileHash = 0
+
+        conn = Connection(True, 'ESP32')
+        #uuid = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
+        uuid = "b1d3c2c4-7553-11ec-90d6-0242ac120003"
+
+
+        def value_received(interface, changed, invalidated, path):
+            global first
+            global f
+            global totalBytes
+            global receivedBytes
+            global wholeString
+            global fileHash
+            global conn
+            global uuid
+            if 'Value' in changed:
+                value = bluetooth_utils.dbus_to_python(changed['Value'])
+                if first:
+                    first = False
+                    fileHash = convertHashtoStr(bytearray(value[0:16]))
+                    totalBytes = value[16] + (value[17] << 8) + (value[18] << 16) + (value[19] << 24)
+                    print("-------------------- File Transfer Started --------------------")
+                    print(f"Hash of file {fileHash}")
+                    print(f"Total file size {totalBytes}")
+                else:
+                    newBytes = bytearray(value)
+                    receivedBytes += len(value)
+                    #print(newBytes.decode('utf-8'))
+                    print(f"Received bytes: {receivedBytes}")
+                    f.write(newBytes)
+                    if receivedBytes == totalBytes:
+                        print("-------------------- File Transfer Completed --------------------")
+                        conn.stop_notifications_uuid(uuid, value_received)
+                        f.close()
+                    
+        print(bool(conn.is_connected_other()))
+        
+        if conn.is_connected_other():
+            print("Sorry - something is already connected to device " + conn.bdaddr)
+            sys.exit(1)
+            
+        print("Connecting to " + conn.pattern)
+        conn.connect()
+        conn.discoverServices();
+        #conn.read_from_uuid(uuid)
+        conn.start_notifications_uuid(uuid, value_received)
+        checkHash(fileHash, "testOutput.txt")
+
+        time.sleep(5)
+        print("Disconnecting from " + conn.bdaddr)
+        conn.disconnect()
+    except KeyboardInterrupt as e:
+        print("caught KeyboardInterrupt")
+        conn.disconnect()
 
