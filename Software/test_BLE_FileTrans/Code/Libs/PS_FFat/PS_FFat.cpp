@@ -130,7 +130,6 @@ void PS_FFat::getmd5Sum(char * output, const char * path){
 }
 
 void PS_FFat::writeTestFile(){
-    //Serial.println(test_file_text);
     if(FORMAT_FFAT){
         PS_FFat::writeFile(FFat, "/testFile.txt", test_file_text);
     }

@@ -6,5 +6,5 @@
 #   Or the cache files from running python as executable
 /Software/tools/ex_python/**/*
 /Software/tools/__pycache__/**/*
-/Software/tools/testOutput.txt
+/Software/tools/*.txt
 /Software/**/screenlog.0
