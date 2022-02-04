@@ -1,0 +1,63 @@
+Circuit: * C:\Users\krist\Documents\Homework\Engr\339_340\TeamSediSensor\Electronics\Simulation\TransAmpedance\Draft1.asc
+
+Direct Newton iteration for .op point succeeded.
+Semiconductor Device Operating Points:
+                        --- Diodes ---
+Name:    d:u1:4      d:u1:1
+Model:    u1:di       u1:x
+Id:      6.72e-16    1.67e-15
+Vd:      6.72e-07    1.67e-03
+Req:     1.00e-09    1.00e-12
+CAP:     0.00e+00    0.00e+00
+
+                        --- Bipolar Transistors ---
+Name:       q1
+Model:      npn
+Ib:       3.86e-06
+Ic:       3.86e-04
+Vbe:      7.50e-01
+Vbc:     -3.51e-01
+Vce:      1.10e+00
+BetaDC:   1.00e+02
+Gm:       1.49e-02
+Rpi:      6.70e+03
+Rx:       0.00e+00
+Ro:       2.05e+20
+Cbe:      0.00e+00
+Cbc:      0.00e+00
+Cjs:      0.00e+00
+BetaAC:   1.00e+02
+Cbx:      0.00e+00
+Ft:       0.00e+00
+
+                        --- VDMOSFET Transistors ---
+Name:        m:u1:2      m:u1:1
+Model:        u1:p        u1:n
+Id:         -2.28e-03    2.23e-03
+Vgs:        -1.67e-03   -1.67e-03
+Vds:        -4.50e+00    5.50e+00
+Vth:         3.00e-01   -3.00e-01
+Gm:          1.51e-02    1.49e-02
+Gds:         0.00e+00    0.00e+00
+Cgs:         0.00e+00    0.00e+00
+Cgd:         0.00e+00    0.00e+00
+Cbody:       0.00e+00    0.00e+00
+
+
+
+Date: Wed Feb 02 13:39:28 2022
+Total elapsed time: 0.056 seconds.
+
+tnom = 27
+temp = 27
+method = trap
+totiter = 10
+traniter = 0
+tranpoints = 0
+accept = 0
+rejected = 0
+matrix size = 13
+fillins = 2
+solver = Normal
+Matrix Compiler1: 652 bytes object code size
+Matrix Compiler2: 1.19 KB object code size
