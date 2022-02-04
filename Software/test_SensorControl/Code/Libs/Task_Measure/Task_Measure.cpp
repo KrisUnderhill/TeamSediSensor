@@ -23,7 +23,7 @@ void TaskMeasure::init(){
     PS_FFat::init();
 
     /* setup pins */
-    pinMode(LED_PIN, OUTPUT);
+    //pinMode(LED_PIN, OUTPUT);
     /* Time setup - hacked from SimpleTime example and idf docs*/
     setenv("TZ", "EST+5EDT,M3.2.0/2,M11.1.0/2", 1); /* hardcoded eastern */
     tzset();
@@ -45,7 +45,7 @@ void TaskMeasure::run(){
         darkReading = analogRead(POT_PIN);
 
         /* turn on LED */
-        digitalWrite(LED_PIN, HIGH);
+        //digitalWrite(LED_PIN, HIGH);
         /* wait 0.5 sec */
         delay(500);
         /* take reading */
@@ -56,7 +56,7 @@ void TaskMeasure::run(){
         /* Wait 0.5 sec */
         delay(500);
         /* turn LED off */
-        digitalWrite(LED_PIN, LOW);
+        //digitalWrite(LED_PIN, LOW);
 
         /* Format string */
         sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f\n", 
