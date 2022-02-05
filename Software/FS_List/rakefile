@@ -130,13 +130,14 @@ namespace "app" do
 
   task :cfgFile do
     t = Time.now
+    suuid = `uuidgen`
+    suuid.strip!
     cfgLib = File.join($OS_Config[:codePath], "Libs", "Config")
     FileUtils.mkdir(cfgLib) unless File.exist?(cfgLib)
     file = <<~EOF
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
-      #define FORMAT_FFAT false
-      #define DATA_FILE_NAME "/data.csv"
+      #define SERVICE_UUID "#{suuid}"
     EOF
     File.write(File.join(cfgLib, "config.h"), file)
   end
@@ -161,16 +162,19 @@ namespace "comms" do
     #   -S - set name
     #   /dev/ttyUSB0 - linux USB port the device is *probably* out of 
     #   115200 - baudrate of the connection
+    #   -L turn logging on
     # In Use
     #   C-a k - kill the screen
     #   C-a d - deattach the screen
+    #   C-a <esc> - enter scrollup mode (<esc> exit scroll mode)
     # Other Commands
     #   screen -ls : List existing (detatched screens)
     #   screen -R : reattach to existing detatched screens - force assumes 1 detached screen to work as expected
+    FileUtils.rm("screenlog.0") if File.exist?("screenlog.0")
     if $OS_Config[:osType].match?("Windows")
       exec "putty -serial #{$OS_Config[:serialPort]} -sercfg 115200"
     else
-      exec "screen -S teamSediSensor_ESP32_Prog #{$OS_Config[:serialPort]} 115200"
+      exec "screen -S teamSediSensor_ESP32_Prog -L #{$OS_Config[:serialPort]} 115200"
     end
   end
 end
