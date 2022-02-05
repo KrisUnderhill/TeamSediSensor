@@ -11,7 +11,8 @@
 
 class PS_FFat {
     public: 
-        static void init();
+        static void fullInit();
+        static void wakeInit();
         static void readDataFile();
         static void setBuffer(char* p_newBuffer, size_t len);
         static void recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset);

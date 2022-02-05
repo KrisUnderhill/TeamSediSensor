@@ -5,7 +5,7 @@
 /* file interaction functions are from the arduino FFat_Test ESP32 example
  * Modified for TSS_Sensor project by Kris Miedema
  */
-#define FORMAT_FFAT true
+#define FORMAT_FFAT false
 #define DATA_FILE_NAME "/data.csv"
 
 char PS_FFat::p_fileBuffer[FILE_BUF_LEN] = {0};
@@ -16,15 +16,21 @@ struct fileXferHeader {
     size_t fileSize;
 };
 
-void PS_FFat::init(){
+void PS_FFat::fullInit(){
     if(FORMAT_FFAT) FFat.format();
     if(!FFat.begin()){
         Serial.println("FFat Mount Failed");
         return;
     }
     writeFile(FFat, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V\n");
-    Serial.println("HELLO WORLD");
     Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V");
+}
+
+void PS_FFat::wakeInit(){
+    if(!FFat.begin()){
+        Serial.println("FFat Mount Failed");
+        return;
+    }
 }
 
 void PS_FFat::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){

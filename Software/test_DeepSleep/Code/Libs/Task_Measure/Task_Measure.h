@@ -3,20 +3,22 @@
 
 #include "Arduino.h"
 #include <time.h>
-#include "../Task_BLE/Task_BLE.h"
 #include "../PS_FFat/PS_FFat.h"
+
+#define POT_PIN 34
+#define LED_PIN 22
+#define MAX_VOLT 3.3
+#define MAX_ADC 4095
+#define BLE_MSG_LEN 500
+#define TIME_ZONE "EST+5EDT,M3.2.0/2,M11.1.0/2"
 
 class TaskMeasure {
     public: 
-        static void init();
+        static void fullInit();
+        static void wakeInit();
         static void run();
     private:
-        static void IRAM_ATTR TimerISR();
-        static double getVoltageFromAdc(int adcReading);
-        static const int POT_PIN = 34;
-        static const int LED_PIN = 22;
-        static constexpr double maxVoltage = 3.3;
-        static const int maxAdcReading = 4095;
+        static float getVoltageFromAdc(int adcReading);
         static int darkReading;
         static int activeReading;
         static hw_timer_t * timer;

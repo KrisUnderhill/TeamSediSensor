@@ -9,55 +9,60 @@
  * until I find a better way. Even if they are not used here necessarily
  */
 #include "Task_Measure.h"
-#include "Task_BLE.h"
 #include "PS_FFat.h"
 #include "config.h"
-#include "PS_FileXferService.h"
 
-#define BACKSPACE 0x7F
-
-std::string inputString = "";
-bool stringComplete = false;
+#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  5        /* Time ESP32 will go to sleep (in seconds) */
 
 void setup()
 {    
     delay(1000);
     Serial.begin(115200);
-    TaskMeasure::init();
-    //TaskBLE::init(); /* Not running bluetooth while testing sensor */
+
+    esp_sleep_wakeup_cause_t wakeup_reason;
+
+    wakeup_reason = esp_sleep_get_wakeup_cause();
+
+    switch(wakeup_reason)
+    {
+        case ESP_SLEEP_WAKEUP_EXT0: 
+            Serial.println("Wakeup caused by external signal using RTC_IO"); 
+            break;
+        case ESP_SLEEP_WAKEUP_EXT1:
+            Serial.println("Wakeup caused by external signal using RTC_CNTL"); 
+            break;
+        case ESP_SLEEP_WAKEUP_TIMER: 
+            Serial.println("Wakeup caused by timer");
+            TaskMeasure::wakeInit();
+            TaskMeasure::run();
+            sleep();
+            break;
+        case ESP_SLEEP_WAKEUP_TOUCHPAD: 
+            Serial.println("Wakeup caused by touchpad"); 
+            break;
+        case ESP_SLEEP_WAKEUP_ULP: 
+            Serial.println("Wakeup caused by ULP program");
+            break;
+        default: 
+            Serial.printf("Wakeup was not caused by deep sleep: %d\r\n",wakeup_reason); 
+            TaskMeasure::fullInit();
+            TaskMeasure::run();
+            sleep();
+            break;
+    }
 }
 
 void loop()
 {
-    /* todo debug TaskMeasure and TaskBLE message passing
-     * especially semaphores to protect file access
-     */
-    TaskMeasure::run(); 
-    //TaskBLE::run();
-    /* Handle serial commands */
-    if(stringComplete){
-        if(inputString == "readData"){
-            PS_FFat::readDataFile();
-        }
-        inputString = "";
-        stringComplete = false;
-        delay(1000);
-    }
+    ;
 }
 
-/* Run on serial event (char arrived) */
-void serialEventRun(){
-    while (Serial.available()) {
-        // get the new byte:
-        char inChar = (char)Serial.read();
-        if (inChar == '\r') {
-          stringComplete = true;
-          Serial.print("\r\n");
-        } else if (inChar == BACKSPACE) {
-            inputString.pop_back();
-        } else {
-            Serial.print(inChar);
-            inputString += inChar;
-        }
-    }
+void sleep(){
+    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+    Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) +
+    " Seconds");
+    Serial.flush(); 
+    esp_deep_sleep_start();
 }
+
