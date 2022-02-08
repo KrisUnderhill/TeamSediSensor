@@ -4,12 +4,12 @@
 #include "Arduino.h"
 #include "../Config/config.h"
 #include "FS.h"
-#include "FFat.h"
-#include "testFile.h"
+#include "SD.h"
+#include "SPI.h"
 
 #define FILE_BUF_LEN 500
 
-class PS_FFat {
+class PS_SDFile {
     public: 
         static void init();
         static void readDataFile();
