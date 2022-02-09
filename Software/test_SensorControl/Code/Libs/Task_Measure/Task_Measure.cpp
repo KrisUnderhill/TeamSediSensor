@@ -14,6 +14,7 @@
 
 int TaskMeasure::activeReading = 0;
 int TaskMeasure::darkReading = 0;
+int TaskMeasure::tempAdc = 0;
 hw_timer_t * TaskMeasure::timer = NULL;
 volatile SemaphoreHandle_t TaskMeasure::timerSemaphore = xSemaphoreCreateBinary();
 char TaskMeasure::timeCStr[BLE_MSG_LEN] = {0};
@@ -78,12 +79,15 @@ void TaskMeasure::run(){
         delay(500);
         /* turn LED off */
         digitalWrite(LED_PIN, LOW);
+        tempAdc = analogRead(TEMP_PIN);
 
         /* Format string */
-        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f\n", 
+        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f\n", 
                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                 tm.tm_hour, tm.tm_min, tm.tm_sec, 
-                darkReading, getVoltageFromAdc(darkReading), activeReading, getVoltageFromAdc(activeReading));
+                darkReading, getVoltageFromAdc(darkReading), 
+                activeReading, getVoltageFromAdc(activeReading),
+                tempAdc, getTempFromAdc(tempAdc));
         Serial.printf("%s\r", timeCStr);
         //taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr)-1); /* -1 : I don't want the \n char or the \0 end */
         PS_SDFile::setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
@@ -93,6 +97,11 @@ void TaskMeasure::run(){
 double TaskMeasure::getVoltageFromAdc(int adcReading){
     double voltage = ((double)adcReading/(double)maxAdcReading)*maxVoltage;
     return voltage;
+}
+
+double TaskMeasure::getTempFromAdc(int adcReading){
+    double temp = getVoltageFromAdc(adcReading)/VOLTS_PER_DEG;
+    return temp;
 }
 
 void IRAM_ATTR TaskMeasure::TimerISR(){

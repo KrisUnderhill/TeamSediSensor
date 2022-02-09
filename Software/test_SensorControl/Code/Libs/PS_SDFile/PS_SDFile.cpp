@@ -22,7 +22,7 @@ void PS_SDFile::init(){
         Serial.println("Card Mount Failed");
         return;
     }
-    writeFile(SD, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V\n");
+    writeFile(SD, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V, temp_ADC, temp_F\n");
     Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V");
 }
 
