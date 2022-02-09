@@ -23,7 +23,7 @@ void PS_SDFile::init(){
         return;
     }
     writeFile(SD, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V, temp_ADC, temp_F\n");
-    Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V");
+    Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V, temp_ADC, temp_F");
 }
 
 void PS_SDFile::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
