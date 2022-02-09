@@ -23,7 +23,6 @@ void PS_FFat::init(){
         return;
     }
     writeFile(FFat, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V\n");
-    Serial.println("HELLO WORLD");
     Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V");
 }
 

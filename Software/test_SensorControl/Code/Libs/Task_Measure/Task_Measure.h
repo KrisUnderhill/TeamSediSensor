@@ -6,6 +6,8 @@
 #include "../Task_BLE/Task_BLE.h"
 #include "../PS_FFat/PS_FFat.h"
 
+#define PHOTOTRANSISTOR_PIN 32
+
 class TaskMeasure {
     public: 
         static void init();
@@ -13,9 +15,9 @@ class TaskMeasure {
     private:
         static void IRAM_ATTR TimerISR();
         static double getVoltageFromAdc(int adcReading);
-        static const int POT_PIN = 34;
+        static const int ADC_PIN = 34;
         static const int LED_PIN = 22;
-        static constexpr double maxVoltage = 3.3;
+        static constexpr double maxVoltage = 3.9;
         static const int maxAdcReading = 4095;
         static int darkReading;
         static int activeReading;
