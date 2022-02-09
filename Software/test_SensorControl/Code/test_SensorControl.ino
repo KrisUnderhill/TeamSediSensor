@@ -12,7 +12,7 @@
  */
 #include "Task_Measure.h"
 #include "Task_BLE.h"
-#include "PS_FFat.h"
+#include "PS_SDFile.h"
 #include "config.h"
 #include "PS_FileXferService.h"
 
@@ -40,7 +40,7 @@ void loop()
     /* Handle serial commands */
     if(stringComplete){
         if(inputString == "readData"){
-            PS_FFat::readDataFile();
+            PS_SDFile::readDataFile();
         }
         inputString = "";
         stringComplete = false;

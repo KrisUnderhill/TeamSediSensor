@@ -9,7 +9,7 @@
 #include "stdio.h"
 #include <time.h>
 #include "../Config/config.h" /* Include path for lib */
-#include "../PS_FFat/PS_FFat.h"
+#include "../PS_SDFile/PS_SDFile.h"
 /* #include timer stuff - done automatically by Arduino IDE */
 
 int TaskMeasure::activeReading = 0;
@@ -20,7 +20,7 @@ char TaskMeasure::timeCStr[BLE_MSG_LEN] = {0};
 
 void TaskMeasure::init(){
     /* init file system here */
-    PS_FFat::init();
+    PS_SDFile::init();
 
     /* setup pins */
     pinMode(LED_PIN, OUTPUT);
@@ -85,7 +85,8 @@ void TaskMeasure::run(){
                 tm.tm_hour, tm.tm_min, tm.tm_sec, 
                 darkReading, getVoltageFromAdc(darkReading), activeReading, getVoltageFromAdc(activeReading));
         Serial.printf("%s\r", timeCStr);
-        PS_FFat::setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
+        //taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr)-1); /* -1 : I don't want the \n char or the \0 end */
+        PS_SDFile::setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
     }
 }
 

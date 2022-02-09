@@ -1,34 +1,34 @@
 #include "Arduino.h"
-#include "PS_FFat.h"
+#include "PS_SDFile.h"
 #include <MD5Builder.h>
 
-/* file interaction functions are from the arduino FFat_Test ESP32 example
+/* file interaction functions are from the arduino SD_Test ESP32 example
+ * Moved to SD card implementation from FFat on builtin spi flash
  * Modified for TSS_Sensor project by Kris Miedema
  */
 #define FORMAT_FFAT true
 #define DATA_FILE_NAME "/data.csv"
 
-char PS_FFat::p_fileBuffer[FILE_BUF_LEN] = {0};
-size_t PS_FFat::fileBufferLen = 0;
+char PS_SDFile::p_fileBuffer[FILE_BUF_LEN] = {0};
+size_t PS_SDFile::fileBufferLen = 0;
 
 struct fileXferHeader {
     uint8_t md5sum[16];
     size_t fileSize;
 };
 
-void PS_FFat::init(){
-    if(FORMAT_FFAT) FFat.format();
-    if(!FFat.begin()){
-        Serial.println("FFat Mount Failed");
+void PS_SDFile::init(){
+    if(!SD.begin()){
+        Serial.println("Card Mount Failed");
         return;
     }
-    writeFile(FFat, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V\n");
+    writeFile(SD, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V\n");
     Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V");
 }
 
-void PS_FFat::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
+void PS_SDFile::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
     struct fileXferHeader* header = (struct fileXferHeader*) BLEfileBuffer;
-    File file = FFat.open("/data.csv", FILE_READ);
+    File file = SD.open("/data.csv", FILE_READ);
     MD5Builder md5;
     md5.begin();
     size_t maxLen = file.size();
@@ -42,30 +42,30 @@ void PS_FFat::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBuffer
     file.close();
 }
 
-void PS_FFat::recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset){
+void PS_SDFile::recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset){
     /* TODO: Make api decisions */
     memset(p_destBuffer, 0, *len);
-    File file = FFat.open("/data.csv", FILE_READ);
+    File file = SD.open("/data.csv", FILE_READ);
     file.seek(*offset);
     *len = file.read(p_destBuffer, *len);
     *offset = file.position();
     file.close();
 }
 
-void PS_FFat::setBuffer(char* p_newBuffer, size_t len){
+void PS_SDFile::setBuffer(char* p_newBuffer, size_t len){
     /* TODO Decide if this is the way to go or support api to write from outside buffer */
     if(len > 0 && len < FILE_BUF_LEN){
         memcpy((void*)p_fileBuffer, (const void*)p_newBuffer, len);
         fileBufferLen = len;
     }
-    appendFile(FFat, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
+    appendFile(SD, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
 }
 
-void PS_FFat::readDataFile(){
-    PS_FFat::readFile(FFat, "/data.csv");
+void PS_SDFile::readDataFile(){
+    PS_SDFile::readFile(SD, "/data.csv");
 }
 
-void PS_FFat::readFile(fs::FS &fs, const char * path){
+void PS_SDFile::readFile(fs::FS &fs, const char * path){
     Serial.printf("Reading file: %s\r\n", path);
 
     File file = fs.open(path);
@@ -90,7 +90,7 @@ void PS_FFat::readFile(fs::FS &fs, const char * path){
 }
 
 
-void PS_FFat::writeFile(fs::FS &fs, const char * path, const char * message){
+void PS_SDFile::writeFile(fs::FS &fs, const char * path, const char * message){
     //Serial.printf("Writing file: %s\r\n", path);
 
     File file = fs.open(path, FILE_WRITE);
@@ -106,7 +106,7 @@ void PS_FFat::writeFile(fs::FS &fs, const char * path, const char * message){
     file.close();
 }
 
-void PS_FFat::appendFile(fs::FS &fs, const char * path, const char * message){
+void PS_SDFile::appendFile(fs::FS &fs, const char * path, const char * message){
     //Serial.printf("Appending to file: %s\r\n", path);
 
     File file = fs.open(path, FILE_APPEND);
@@ -122,8 +122,8 @@ void PS_FFat::appendFile(fs::FS &fs, const char * path, const char * message){
     file.close();
 }
 
-void PS_FFat::getmd5Sum(char * output, const char * path){
-    File file = FFat.open(path, FILE_READ);
+void PS_SDFile::getmd5Sum(char * output, const char * path){
+    File file = SD.open(path, FILE_READ);
     MD5Builder md5;
     md5.begin();
     size_t maxLen = file.size();
