@@ -1,6 +1,8 @@
 /*
- *  This sketch demonstrates testing of BLE functionality
- *  Based existing GPIO functionality
+ *  This sketch improves control of the sensor in testing
+ *  Powers the Phototransistor + amplifier 
+ *  Controls the LED
+ *  reads data from the ADC
  */
 
 /* Arduino IDE will only compile libraries it knows are being used in the *.ino file
@@ -24,12 +26,13 @@ void setup()
     delay(1000);
     Serial.begin(115200);
     TaskMeasure::init();
+    TaskMeasure::run();
     //TaskBLE::init(); /* Not running bluetooth while testing sensor */
 }
 
 void loop()
 {
-    /* todo debug TaskMeasure and TaskBLE message passing
+    /* TODO debug TaskMeasure and TaskBLE message passing
      * especially semaphores to protect file access
      */
     TaskMeasure::run(); 
