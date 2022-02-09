@@ -7,7 +7,7 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include "../Config/config.h"
-#include "../PS_FFat/PS_FFat.h"
+#include "../PS_SDFile/PS_SDFile.h"
 #include "../PS_FileXferService/PS_FileXferService.h"
 
 /* bluetoothctl man menu scan
@@ -20,17 +20,27 @@
     * Calling any without parameter gives its values
 */
 
+#define BUTTON_PIN 21
+
 class TaskBLE {
     public: 
         static void init();
         static void run();
         static void setBuffer(uint8_t* p_newBuffer, size_t len);
     private:
+        static volatile bool deviceConnected;
+        static volatile bool oldDeviceConnected;
+        static volatile bool startBLE;
         static uint8_t p_serialBuffer[BLE_MSG_LEN];
         static size_t serialBufferLen;
         static BLEServer* p_server;
         static BLECharacteristic* pCharacteristic;
         static bool newVal;
+        class MyServerCallbacks: public BLEServerCallbacks {
+            void onConnect(BLEServer* p_server);
+            void onDisconnect(BLEServer* p_server);
+        };
+        static void IRAM_ATTR buttonInt();
 };
 #endif /* TASK_BLE_H_ */
 

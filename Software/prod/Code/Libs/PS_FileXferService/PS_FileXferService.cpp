@@ -89,7 +89,7 @@ void PS_FileXferReadChar::descCallbacks::onWrite(BLEDescriptor* p_descriptor){
  */
 /* static */ void PS_FileXferReadChar::onConnect(){
     fileXferStatus = PAUSED;
-    PS_FFat::initializeFileBuffer(p_xferBuffer, &xferBufferLen); 
+    PS_SDFile::initializeFileBuffer(p_xferBuffer, &xferBufferLen); 
     p_readChar->setValue(p_xferBuffer, xferBufferLen);
     fileSize = 0;
     offset = 0;
@@ -104,7 +104,7 @@ void PS_FileXferReadChar::descCallbacks::onWrite(BLEDescriptor* p_descriptor){
             break;
         case STARTING:
             fileXferStatus = WAIT_RESP;
-            PS_FFat::initializeFileBuffer(p_xferBuffer, &xferBufferLen); 
+            PS_SDFile::initializeFileBuffer(p_xferBuffer, &xferBufferLen); 
             p_readChar->setValue(p_xferBuffer, xferBufferLen);
             Serial.println("--------------------Starting FileXfer--------------------");
             /* TODO: convert this into using the File header struct to get data out */
@@ -122,7 +122,7 @@ void PS_FileXferReadChar::descCallbacks::onWrite(BLEDescriptor* p_descriptor){
              *  configure state machine to indicate new data and client reads
              */
             xferBufferLen = BLE_MSG_LEN;
-            PS_FFat::recvBuffer(p_xferBuffer, &xferBufferLen, &offset);
+            PS_SDFile::recvBuffer(p_xferBuffer, &xferBufferLen, &offset);
             Serial.printf("Sending MSG\r\n\toffset: %d, full fileSize: %d, text: %s, len: %d\r\n", offset, fileSize, p_xferBuffer, xferBufferLen);
             p_readChar->setValue(p_xferBuffer, xferBufferLen);
             p_readChar->indicate();

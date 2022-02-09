@@ -90,8 +90,8 @@ namespace "app" do
   task build: %w[setBuildPath autoGenFiles copyLibs] do
     # build the main .ino arduino program
     # create build cmd string
-    # remove -v : verbose for now
-    buildCmd = "#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files --verify #{$OS_Config[:filePath]}"
+    # add -v : verbose for now
+    buildCmd = "#{$OS_Config[:arduinoCmd]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files --verify #{$OS_Config[:filePath]} -v"
     binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
     FileUtils.rm(binFile) if File.exist?(binFile)
     system buildCmd
@@ -99,8 +99,8 @@ namespace "app" do
 
   desc 'flash the binary to the micro'
   task flash: %w[clean setBuildPath autoGenFiles copyLibs] do # This should depend on build but since arduino cmd automatically rebuilds anyway 
-    # removing -v verbose output
-    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files"
+    # add -v verbose output
+    flashCmd = "#{$OS_Config[:arduinoCmd]} --port #{$OS_Config[:serialPort]} --upload #{$OS_Config[:filePath]} --board esp32:esp32:esp32doit-devkit-v1 --preserve-temp-files -v"
     system flashCmd
   end
 
@@ -121,6 +121,8 @@ namespace "app" do
       --flash_freq 80m --flash_size detect 0xe000 #{espLibPath}/partitions/boot_app0.bin 0x1000 
       #{espLibPath}/sdk/bin/bootloader_dio_80m.bin 0x10000 #{binPath}.ino.bin 0x8000 #{binPath}.ino.partitions.bin 
     STRING
+    puts flashCmd
+
     # This has a lot of extra functionality possibly useful
     binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
     system flashCmd if File.exist?(binFile)
@@ -137,8 +139,6 @@ namespace "app" do
     file = <<~EOF
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
-      #define FORMAT_FFAT true
-      #define DATA_FILE_NAME "/data.csv"
       #define SERVICE_UUID "#{suuid}"
     EOF
     File.write(File.join(cfgLib, "config.h"), file)
@@ -200,7 +200,7 @@ end
 task build: %[app:build]
 
 task :default do
-  Rake::Task["app:flash"].invoke
+  Rake::Task["app:esp32flash"].invoke
   binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
   if File.exist?(binFile)
     Rake::Task["comms:serial"].invoke

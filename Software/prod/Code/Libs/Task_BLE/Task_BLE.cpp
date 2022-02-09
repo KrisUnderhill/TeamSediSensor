@@ -14,27 +14,34 @@
 #include "Task_BLE.h"
 #include <cstring>
 
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
+volatile bool TaskBLE::deviceConnected = false;
+volatile bool TaskBLE::oldDeviceConnected = false;
+volatile bool TaskBLE::startBLE = false;
 uint8_t TaskBLE::p_serialBuffer[BLE_MSG_LEN] = {0};
 size_t TaskBLE::serialBufferLen = 0;
 BLEServer* TaskBLE::p_server = NULL;
 BLECharacteristic* TaskBLE::pCharacteristic = NULL;
 bool TaskBLE::newVal = false;
 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* p_server) {
-        deviceConnected = true;
-    };
-
-    void onDisconnect(BLEServer* p_server) {
-        deviceConnected = false;
-    } 
+void TaskBLE::MyServerCallbacks::onConnect(BLEServer* p_server) {
+    TaskBLE::deviceConnected = true;
 };
+
+void TaskBLE::MyServerCallbacks::onDisconnect(BLEServer* p_server) {
+    TaskBLE::deviceConnected = false;
+} 
+
+
+void IRAM_ATTR TaskBLE::buttonInt(){
+    startBLE = true;
+}
 
 void TaskBLE::init(){
     /* Create the BLE Device */
     BLEDevice::init("ESP32");
+
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    attachInterrupt(BUTTON_PIN, buttonInt, FALLING);
 
     /* Create the BLE Server */
     p_server = BLEDevice::createServer();
@@ -48,11 +55,17 @@ void TaskBLE::init(){
     pAdvertising->addServiceUUID(SERVICE_UUID);
     pAdvertising->setScanResponse(false);
     pAdvertising->setMinPreferred(0x00);  // set value to 0x00 to not advertise this parameter
-    BLEDevice::startAdvertising();
     Serial.println("Waiting a client connection to notify...");
 }
 
 void TaskBLE::run(){
+    /* Start BLE */
+    if (startBLE){
+        Serial.println("start advertising");
+        BLEDevice::startAdvertising();
+        startBLE = false;
+    }
+    
     /* While Connnected */
     if (deviceConnected) {
         PS_FileXferReadChar::whileConnect();
@@ -66,10 +79,8 @@ void TaskBLE::run(){
     }
     /* On Disconnect */
     if (!deviceConnected && oldDeviceConnected) {
+        Serial.println("Device Disconnected");
         PS_FileXferReadChar::onDisconnect();
-        delay(500); // give the bluetooth stack the chance to get things ready
-        p_server->startAdvertising(); // restart advertising
-        Serial.println("start advertising");
         oldDeviceConnected = deviceConnected;
     }
     /* On Connect */
