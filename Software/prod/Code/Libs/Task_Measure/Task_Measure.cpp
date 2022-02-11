@@ -41,24 +41,6 @@ void TaskMeasure::init(){
     timerAlarmEnable(timer); /* Enable timer alarms */
 }
 
-//void TaskMeasure::run(){
-//    if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
-//        digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
-//        time_t startTime = time(NULL);
-//        time_t finishTime = time(NULL);
-//        int reading;
-//        while((finishTime - startTime) < 10){
-//            struct tm tm = *localtime(&finishTime);
-//            reading = analogRead(ADC_PIN);
-//            Serial.printf("%d-%02d-%02d %02d:%02d:%02d, %d, %.3f\r\n", 
-//                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
-//                tm.tm_hour, tm.tm_min, tm.tm_sec, 
-//                reading, getVoltageFromAdc(reading));
-//            finishTime = time(NULL);
-//        }
-//    }
-//}
-
 void TaskMeasure::run(){
     if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
         digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);

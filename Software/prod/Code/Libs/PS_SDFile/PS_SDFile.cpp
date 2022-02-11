@@ -11,6 +11,7 @@
 
 char PS_SDFile::p_fileBuffer[FILE_BUF_LEN] = {0};
 size_t PS_SDFile::fileBufferLen = 0;
+bool PS_SDFile::bleFileLock = false;
 
 struct fileXferHeader {
     uint8_t md5sum[16];
@@ -27,6 +28,7 @@ void PS_SDFile::init(){
 }
 
 void PS_SDFile::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
+    bleFileLock = true;
     struct fileXferHeader* header = (struct fileXferHeader*) BLEfileBuffer;
     File file = SD.open("/data.csv", FILE_READ);
     MD5Builder md5;
@@ -54,11 +56,14 @@ void PS_SDFile::recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset){
 
 void PS_SDFile::setBuffer(char* p_newBuffer, size_t len){
     /* TODO Decide if this is the way to go or support api to write from outside buffer */
-    if(len > 0 && len < FILE_BUF_LEN){
-        memcpy((void*)p_fileBuffer, (const void*)p_newBuffer, len);
-        fileBufferLen = len;
+    if(len > 0 && len < FILE_BUF_LEN-fileBufferLen){
+        char* p_buf = &p_fileBuffer[fileBufferLen];
+        memcpy((void*)p_buf, (const void*)p_newBuffer, len);
+        fileBufferLen += len;
     }
-    appendFile(SD, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
+    if(!bleFileLock)
+        appendFile(SD, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
+        fileBufferLen = 0;
 }
 
 void PS_SDFile::readDataFile(){
@@ -131,5 +136,13 @@ void PS_SDFile::getmd5Sum(char * output, const char * path){
     md5.calculate();
     md5.getChars(output);
     file.close();
+}
+
+void PS_SDFile::lockBleFile(){
+    bleFileLock = true;
+}
+
+void PS_SDFile::unlockBleFile(){
+    bleFileLock = false;
 }
 

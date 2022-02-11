@@ -123,7 +123,15 @@ void PS_FileXferReadChar::descCallbacks::onWrite(BLEDescriptor* p_descriptor){
              */
             xferBufferLen = BLE_MSG_LEN;
             PS_SDFile::recvBuffer(p_xferBuffer, &xferBufferLen, &offset);
-            Serial.printf("Sending MSG\r\n\toffset: %d, full fileSize: %d, text: %s, len: %d\r\n", offset, fileSize, p_xferBuffer, xferBufferLen);
+            Serial.printf("Sending MSG\r\n\toffset: %d, full fileSize: %d, len: %d text: \r\n", offset, fileSize, xferBufferLen);
+            for(int i = 0; i < xferBufferLen; i++){
+                char c = (char)p_xferBuffer[i];
+                if(c == '\n')
+                    Serial.print("\r\n");
+                else
+                    Serial.print(c);
+            }
+            Serial.println();
             p_readChar->setValue(p_xferBuffer, xferBufferLen);
             p_readChar->indicate();
             break;
@@ -134,6 +142,7 @@ void PS_FileXferReadChar::descCallbacks::onWrite(BLEDescriptor* p_descriptor){
             Serial.println("--------------------File Xfer Finished--------------------");
             offset = 0;
             fileSize = 0;
+            PS_SDFile::unlockBleFile();
             fileXferStatus = PAUSED;
             break;
         case FAILED:
@@ -153,6 +162,7 @@ void PS_FileXferReadChar::descCallbacks::onWrite(BLEDescriptor* p_descriptor){
  *     transfer terminates, either success or failure
  */
 /* static */ void PS_FileXferReadChar::onDisconnect(){
+    PS_SDFile::recvBuffer(p_xferBuffer, &xferBufferLen, &offset);
     offset = 0;
     fileSize = 0;
     fileXferStatus = PAUSED;
