@@ -121,7 +121,6 @@ namespace "app" do
       --flash_freq 80m --flash_size detect 0xe000 #{espLibPath}/partitions/boot_app0.bin 0x1000 
       #{espLibPath}/sdk/bin/bootloader_dio_80m.bin 0x10000 #{binPath}.ino.bin 0x8000 #{binPath}.ino.partitions.bin 
     STRING
-    puts flashCmd
 
     # This has a lot of extra functionality possibly useful
     binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
