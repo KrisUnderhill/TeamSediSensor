@@ -1,6 +1,8 @@
 /*
- *  This sketch demonstrates testing of BLE functionality
- *  Based existing GPIO functionality
+ *  This sketch is the production intent software
+ *  Powers the Phototransistor + amplifier 
+ *  Controls the LED
+ *  reads data from the ADC
  */
 
 /* Arduino IDE will only compile libraries it knows are being used in the *.ino file
@@ -10,7 +12,7 @@
  */
 #include "Task_Measure.h"
 #include "Task_BLE.h"
-#include "PS_FFat.h"
+#include "PS_SDFile.h"
 #include "config.h"
 #include "PS_FileXferService.h"
 
@@ -23,14 +25,14 @@ void setup()
 {    
     delay(1000);
     Serial.begin(115200);
-    PS_FFat::init();
     TaskMeasure::init();
-    TaskBLE::init();
+    TaskMeasure::run();
+    TaskBLE::init(); 
 }
 
 void loop()
 {
-    /* todo debug TaskMeasure and TaskBLE message passing
+    /* TODO debug TaskMeasure and TaskBLE message passing
      * especially semaphores to protect file access
      */
     TaskMeasure::run(); 
@@ -38,7 +40,7 @@ void loop()
     /* Handle serial commands */
     if(stringComplete){
         if(inputString == "readData"){
-            PS_FFat::readDataFile();
+            PS_SDFile::readDataFile();
         }
         inputString = "";
         stringComplete = false;
