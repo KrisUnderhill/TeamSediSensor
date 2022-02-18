@@ -11,7 +11,6 @@ void wifiServer::handleNotFound() {
       return;
   }
   if(server.uri() == icon){
-      Serial.println("I requested the icon");
       loadIcon();
       return;
   }
@@ -65,25 +64,16 @@ void wifiServer::handleGet() {
 }
 
 void wifiServer::init(){
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  Serial.println("Configuring access point...");
 
-  // Wait for connection
-  uint8_t i = 0;
-  while (WiFi.status() != WL_CONNECTED && i++ < 20) {//wait 10 seconds
-    delay(500);
-  }
-  if (i == 21) {
-    Serial.print("Could not connect to");
-    //Serial.println(ssid);
-    while (1) {
-      delay(500);
-    }
-  }
-  Serial.print("Connected! IP address: ");
-  Serial.println(WiFi.localIP());
+  // You can remove the password parameter if you want the AP to be open.
+  WiFi.softAP(ssid, password);
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+  server.begin();
+
+  Serial.println("Server started");
 
   if (MDNS.begin(host)) {
     MDNS.addService("http", "tcp", 80);
