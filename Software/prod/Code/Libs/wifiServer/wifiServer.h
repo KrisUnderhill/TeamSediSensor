@@ -12,9 +12,9 @@
 
 class wifiServer {
     public:
-        static void init();
+        static void start();
+        static void stop();
         static void run();
-
     private:
         static void handleNotFound();
         static void handleGet();

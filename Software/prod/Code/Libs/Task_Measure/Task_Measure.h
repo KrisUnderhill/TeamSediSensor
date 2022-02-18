@@ -12,7 +12,10 @@ class TaskMeasure {
     public: 
         static void init();
         static void run();
+        static void pauseTask() { taskRunning = false; }
+        static void resumeTask() { taskRunning = true; }
     private:
+        static volatile bool taskRunning;
         static void IRAM_ATTR TimerISR();
         static double getVoltageFromAdc(int adcReading);
         static double getTempFromAdc(int adcReading);

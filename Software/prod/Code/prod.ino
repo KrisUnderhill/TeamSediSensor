@@ -11,10 +11,10 @@
  * until I find a better way. Even if they are not used here necessarily
  */
 #include "Task_Measure.h"
-#include "Task_BLE.h"
 #include "PS_SDFile.h"
 #include "config.h"
-#include "PS_FileXferService.h"
+#include "Task_Wifi.h"
+#include "wifiServer.h"
 
 #define BACKSPACE 0x7F
 
@@ -26,17 +26,16 @@ void setup()
     delay(1000);
     Serial.begin(115200);
     TaskMeasure::init();
-    TaskMeasure::run();
-    TaskBLE::init(); 
+    TaskWifi::init();
 }
 
 void loop()
 {
-    /* TODO debug TaskMeasure and TaskBLE message passing
+    /* TODO debug TaskMeasure and Task_Wifi  message passing
      * especially semaphores to protect file access
      */
     TaskMeasure::run(); 
-    TaskBLE::run();
+    TaskWifi::run();
     /* Handle serial commands */
     if(stringComplete){
         if(inputString == "readData"){
