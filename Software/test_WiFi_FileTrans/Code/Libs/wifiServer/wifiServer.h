@@ -15,24 +15,19 @@ class wifiServer {
         static void run();
 
     private:
-        static void returnOK();
-        static void returnFail(String msg);
-        static bool loadFromSdCard(String path);
-        static void handleFileUpload();
-        static void deleteRecursive(String path);
-        static void handleDelete();
-        static void handleCreate();
-        static void printDirectory();
         static void handleNotFound();
+        static void handleGet();
+        static void loadDataFile();
+        static void loadIcon();
 
         /* This is against iso c but char id[] doesn't work
          * idk why I get linker errors 
          * since this is only a temp method 
          * until an ap is running imma leave it 
          */
-        static constexpr char* ssid = "Kenneth";
-        static constexpr char* password = "keineahnung";
-        static constexpr char* host = "esp32sd";
+        static constexpr char* ssid = "TSS";
+        static constexpr char* password = "teamsedisensor";
+        static constexpr char* host = "TSS";
 
         static WebServer server;
 
