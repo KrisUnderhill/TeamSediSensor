@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <WiFiAP.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <SPI.h>
