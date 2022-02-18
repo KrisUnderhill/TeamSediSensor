@@ -1,10 +1,9 @@
 #include "wifiServer.h"
  
 WebServer wifiServer::server(80);
-bool wifiServer::hasSD = false; 
  
 void wifiServer::handleNotFound() {
-    String dataFile = "/testFile.txt";
+    String dataFile = "/data.csv";
     String icon = "/favicon.ico";
     if(server.uri() == dataFile){
         loadDataFile();
@@ -25,7 +24,7 @@ void wifiServer::handleNotFound() {
 
 void wifiServer::loadDataFile(){
     String dataType = "application/octet-stream";
-    File dataFile = SD.open("/testFile.txt"); 
+    File dataFile = SD.open("/data.csv"); 
 
     if (!dataFile) {
         return;

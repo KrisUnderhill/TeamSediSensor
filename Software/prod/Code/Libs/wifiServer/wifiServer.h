@@ -31,9 +31,6 @@ class wifiServer {
         static constexpr char* host = "TSS";
 
         static WebServer server;
-
-        static bool hasSD;
-        static File uploadFile;
 };
 
 #endif /*_WIFI_SERVER_H_*/

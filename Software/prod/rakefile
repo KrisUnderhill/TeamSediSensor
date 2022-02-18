@@ -131,14 +131,11 @@ namespace "app" do
 
   task :cfgFile do
     t = Time.now
-    suuid = `uuidgen`
-    suuid.strip!
     cfgLib = File.join($OS_Config[:codePath], "Libs", "Config")
     FileUtils.mkdir(cfgLib) unless File.exist?(cfgLib)
     file = <<~EOF
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
-      #define SERVICE_UUID "#{suuid}"
     EOF
     File.write(File.join(cfgLib, "config.h"), file)
   end

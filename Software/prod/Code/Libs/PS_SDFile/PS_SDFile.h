@@ -25,7 +25,6 @@ class PS_SDFile {
         static void appendFile(fs::FS &fs, const char * path, const char * message);
         static char p_fileBuffer[FILE_BUF_LEN];
         static size_t fileBufferLen;
-        static bool bleFileLock;
 };
 #endif /* PS_SDFILE_H_ */
 
