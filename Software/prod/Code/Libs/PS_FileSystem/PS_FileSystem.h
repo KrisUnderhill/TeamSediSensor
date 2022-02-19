@@ -5,8 +5,6 @@
 #include "../Config/config.h"
 #include "FS.h"
 
-#define USE_FFAT 1
-
 #ifdef USE_FFAT
     #include "FFat.h"
     #define fileSystem FFat
