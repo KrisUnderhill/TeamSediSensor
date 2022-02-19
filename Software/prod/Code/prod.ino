@@ -11,10 +11,10 @@
  * until I find a better way. Even if they are not used here necessarily
  */
 #include "Task_Measure.h"
-#include "Task_BLE.h"
-#include "PS_SDFile.h"
+#include "PS_FileSystem.h"
 #include "config.h"
-#include "PS_FileXferService.h"
+#include "Task_Wifi.h"
+#include "PS_WifiServer.h"
 
 #define BACKSPACE 0x7F
 
@@ -26,21 +26,32 @@ void setup()
     delay(1000);
     Serial.begin(115200);
     TaskMeasure::init();
-    TaskMeasure::run();
-    TaskBLE::init(); 
+    TaskWifi::init();
 }
 
 void loop()
 {
-    /* TODO debug TaskMeasure and TaskBLE message passing
+    /* TODO debug TaskMeasure and Task_Wifi  message passing
      * especially semaphores to protect file access
      */
     TaskMeasure::run(); 
-    TaskBLE::run();
+    TaskWifi::run();
     /* Handle serial commands */
     if(stringComplete){
         if(inputString == "readData"){
-            PS_SDFile::readDataFile();
+            File f;
+            PS_FileSystem::open(&f, DATA, FILE_READ);
+            char readChar;
+            size_t len = 1;
+            while(f.available()){
+                f.readBytes(&readChar, len);
+                if(readChar == '\n') {
+                    Serial.print("\r\n");
+                } else {
+                    Serial.print(readChar);
+                }
+            }
+            PS_FileSystem::close(DATA);
         }
         inputString = "";
         stringComplete = false;
@@ -64,3 +75,4 @@ void serialEventRun(){
         }
     }
 }
+

@@ -4,7 +4,7 @@
 #include "Arduino.h"
 #include <time.h>
 #include "../Task_BLE/Task_BLE.h"
-#include "../PS_SDFile/PS_SDFile.h"
+#include "../PS_FileSystem/PS_FileSystem.h"
 
 #define PHOTOTRANSISTOR_PIN 32
 
@@ -12,7 +12,10 @@ class TaskMeasure {
     public: 
         static void init();
         static void run();
+        static void pauseTask() { taskRunning = false; }
+        static void resumeTask() { taskRunning = true; }
     private:
+        static volatile bool taskRunning;
         static void IRAM_ATTR TimerISR();
         static double getVoltageFromAdc(int adcReading);
         static double getTempFromAdc(int adcReading);

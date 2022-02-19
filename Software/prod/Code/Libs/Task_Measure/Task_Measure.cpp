@@ -9,19 +9,21 @@
 #include "stdio.h"
 #include <time.h>
 #include "../Config/config.h" /* Include path for lib */
-#include "../PS_SDFile/PS_SDFile.h"
+#include "../PS_FileSystem/PS_FileSystem.h"
 /* #include timer stuff - done automatically by Arduino IDE */
+#define MSG_LEN 500
 
+volatile bool TaskMeasure::taskRunning = true;
 int TaskMeasure::activeReading = 0;
 int TaskMeasure::darkReading = 0;
 int TaskMeasure::tempAdc = 0;
 hw_timer_t * TaskMeasure::timer = NULL;
 volatile SemaphoreHandle_t TaskMeasure::timerSemaphore = xSemaphoreCreateBinary();
-char TaskMeasure::timeCStr[BLE_MSG_LEN] = {0};
+char TaskMeasure::timeCStr[MSG_LEN] = {0};
 
 void TaskMeasure::init(){
     /* init file system here */
-    PS_SDFile::init();
+    PS_FileSystem::init();
 
     /* setup pins */
     pinMode(LED_PIN, OUTPUT);
@@ -42,37 +44,41 @@ void TaskMeasure::init(){
 }
 
 void TaskMeasure::run(){
-    if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
-        digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
-        delay(2000);
-        /* Read Dark Current */
-        darkReading = analogRead(ADC_PIN);
+    if(taskRunning) {
+        if(xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
+            digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
+            delay(2000);
+            /* Read Dark Current */
+            darkReading = analogRead(ADC_PIN);
 
-        /* turn on LED */
-        digitalWrite(LED_PIN, HIGH);
-        /* wait 0.5 sec */
-        delay(1500);
-        /* take reading */
-        activeReading = analogRead(ADC_PIN);
-        /* Take time */        
-        time_t t = time(NULL);
-        struct tm tm = *localtime(&t);
-        /* Wait 0.5 sec */
-        delay(500);
-        /* turn LED off */
-        digitalWrite(LED_PIN, LOW);
-        tempAdc = analogRead(TEMP_PIN);
+            /* turn on LED */
+            digitalWrite(LED_PIN, HIGH);
+            /* wait 0.5 sec */
+            delay(1500);
+            /* take reading */
+            activeReading = analogRead(ADC_PIN);
+            /* Take time */        
+            time_t t = time(NULL);
+            struct tm tm = *localtime(&t);
+            /* Wait 0.5 sec */
+            delay(500);
+            /* turn LED off */
+            digitalWrite(LED_PIN, LOW);
+            tempAdc = analogRead(TEMP_PIN);
 
-        /* Format string */
-        sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f\n", 
-                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
-                tm.tm_hour, tm.tm_min, tm.tm_sec, 
-                darkReading, getVoltageFromAdc(darkReading), 
-                activeReading, getVoltageFromAdc(activeReading),
-                tempAdc, getTempFromAdc(tempAdc));
-        Serial.printf("%s\r", timeCStr);
-        //taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr)-1); /* -1 : I don't want the \n char or the \0 end */
-        PS_SDFile::setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
+            /* Format string */
+            sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f\n", 
+                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
+                    tm.tm_hour, tm.tm_min, tm.tm_sec, 
+                    darkReading, getVoltageFromAdc(darkReading), 
+                    activeReading, getVoltageFromAdc(activeReading),
+                    tempAdc, getTempFromAdc(tempAdc));
+            Serial.printf("%s\r", timeCStr);
+            File f;
+            PS_FileSystem::open(&f, DATA, FILE_APPEND);
+            f.write((const uint8_t*)timeCStr, strlen(timeCStr));
+            PS_FileSystem::close(DATA);
+        }
     }
 }
 
