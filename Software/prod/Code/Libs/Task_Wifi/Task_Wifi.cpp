@@ -38,6 +38,7 @@ void TaskWifi::run(){
 void TaskWifi::startServer(){
     wifiServer::start();
 }
+
 void TaskWifi::stopServer(){
     wifiServer::stop();
     TaskMeasure::resumeTask();

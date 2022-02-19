@@ -1,8 +1,9 @@
-#include "wifiServer.h"
+#include "PS_WifiServer.h"
  
 WebServer wifiServer::server(80);
  
 void wifiServer::handleNotFound() {
+    Serial.println("GOT FILE Request");
     String dataFile = "/data.csv";
     String icon = "/favicon.ico";
     if(server.uri() == dataFile){
@@ -24,42 +25,53 @@ void wifiServer::handleNotFound() {
 
 void wifiServer::loadDataFile(){
     String dataType = "application/octet-stream";
-    File dataFile = SD.open("/data.csv"); 
+    File dataFile; 
+    PS_FileSystem::open(&dataFile, DATA, FILE_READ);
 
     if (!dataFile) {
+        Serial.println("Could not return file");
         return;
     }
   
     if (server.streamFile(dataFile, dataType) != dataFile.size()) {
       Serial.println("Sent less data than expected!");
     }
-  
-    dataFile.close();
+
+    PS_FileSystem::close(DATA);
 }
 
 void wifiServer::loadIcon(){
-    String dataType = "image/x-icon";
-    File dataFile = SD.open("/favicon.ico"); 
+    String iconType = "image/x-icon";
+    File iconFile; 
+    PS_FileSystem::open(&iconFile, ICON, FILE_READ);
 
-    if (!dataFile) {
+    if (!iconFile) {
+        Serial.println("Could not return file");
         return;
     }
   
-    if (server.streamFile(dataFile, dataType) != dataFile.size()) {
+    if (server.streamFile(iconFile, iconType) != iconFile.size()) {
       Serial.println("Sent less data than expected!");
     }
   
-    dataFile.close();
+    PS_FileSystem::close(ICON);
 }
 
 void wifiServer::handleGet() {
-    String path = "/index.htm";
-    String dataType = "text/html";
-    File dataFile = SD.open(path.c_str());
-    if (server.streamFile(dataFile, dataType) != dataFile.size()) {
+    Serial.println("GOT FILE Request");
+    String htmlType = "text/html";
+    File htmlFile;
+    PS_FileSystem::open(&htmlFile, HOME, FILE_READ);
+
+    if (!htmlFile) {
+        Serial.println("Could not return file");
+        return;
+    }
+    if (server.streamFile(htmlFile, htmlType) != htmlFile.size()) {
       Serial.println("Sent less data than expected!");
     }
-    dataFile.close();
+
+    PS_FileSystem::close(HOME);
 }
 
 void wifiServer::start(){

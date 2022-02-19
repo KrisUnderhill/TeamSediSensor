@@ -7,13 +7,12 @@
 #include <WiFiAP.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
-#include <SPI.h>
-#include <SD.h>
+
+#include "../PS_FileSystem/PS_FileSystem.h"
 
 #define ssid "TSS"
 #define password "teamsedisensor"
 #define host "TSS"
-
 
 class wifiServer {
     public:

@@ -14,7 +14,7 @@
 #include "PS_FileSystem.h"
 #include "config.h"
 #include "Task_Wifi.h"
-#include "wifiServer.h"
+#include "PS_WifiServer.h"
 
 #define BACKSPACE 0x7F
 
@@ -39,7 +39,19 @@ void loop()
     /* Handle serial commands */
     if(stringComplete){
         if(inputString == "readData"){
-            //PS_FileSystem::readDataFile();
+            File f;
+            PS_FileSystem::open(&f, DATA, FILE_READ);
+            char readChar;
+            size_t len = 1;
+            while(f.available()){
+                f.readBytes(&readChar, len);
+                if(readChar == '\n') {
+                    Serial.print("\r\n");
+                } else {
+                    Serial.print(readChar);
+                }
+            }
+            PS_FileSystem::close(DATA);
         }
         inputString = "";
         stringComplete = false;
