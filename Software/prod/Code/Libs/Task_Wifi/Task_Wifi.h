@@ -11,7 +11,7 @@
 #include "Arduino.h"
 #include "../Config/config.h"
 #include "../Task_Measure/Task_Measure.h"
-#include "../wifiServer/wifiServer.h"
+#include "../PS_WifiServer/PS_WifiServer.h"
 #include "../PS_FileSystem/PS_FileSystem.h"
 
 #define BUTTON_PIN 21
