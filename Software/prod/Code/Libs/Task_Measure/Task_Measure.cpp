@@ -9,7 +9,7 @@
 #include "stdio.h"
 #include <time.h>
 #include "../Config/config.h" /* Include path for lib */
-#include "../PS_SDFile/PS_SDFile.h"
+#include "../PS_FileSystem/PS_FileSystem.h"
 /* #include timer stuff - done automatically by Arduino IDE */
 #define MSG_LEN 500
 
@@ -23,7 +23,7 @@ char TaskMeasure::timeCStr[MSG_LEN] = {0};
 
 void TaskMeasure::init(){
     /* init file system here */
-    PS_SDFile::init();
+    PS_FileSystem::init();
 
     /* setup pins */
     pinMode(LED_PIN, OUTPUT);
@@ -75,7 +75,7 @@ void TaskMeasure::run(){
                     tempAdc, getTempFromAdc(tempAdc));
             Serial.printf("%s\r", timeCStr);
             //taskB.setBuffer((uint8_t*)timeCStr, strlen(timeCStr)-1); /* -1 : I don't want the \n char or the \0 end */
-            PS_SDFile::setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
+            //PS_FileSystem::setBuffer(timeCStr, strlen(timeCStr)+1); /* +1: I do want the \n and the \0 chars */
         }
     }
 }

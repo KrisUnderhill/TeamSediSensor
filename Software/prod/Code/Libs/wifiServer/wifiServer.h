@@ -10,6 +10,11 @@
 #include <SPI.h>
 #include <SD.h>
 
+#define ssid "TSS"
+#define password "teamsedisensor"
+#define host "TSS"
+
+
 class wifiServer {
     public:
         static void start();
@@ -20,15 +25,6 @@ class wifiServer {
         static void handleGet();
         static void loadDataFile();
         static void loadIcon();
-
-        /* This is against iso c but char id[] doesn't work
-         * idk why I get linker errors 
-         * since this is only a temp method 
-         * until an ap is running imma leave it 
-         */
-        static constexpr char* ssid = "TSS";
-        static constexpr char* password = "teamsedisensor";
-        static constexpr char* host = "TSS";
 
         static WebServer server;
 };

@@ -11,7 +11,7 @@
  * until I find a better way. Even if they are not used here necessarily
  */
 #include "Task_Measure.h"
-#include "PS_SDFile.h"
+#include "PS_FileSystem.h"
 #include "config.h"
 #include "Task_Wifi.h"
 #include "wifiServer.h"
@@ -39,7 +39,7 @@ void loop()
     /* Handle serial commands */
     if(stringComplete){
         if(inputString == "readData"){
-            PS_SDFile::readDataFile();
+            //PS_FileSystem::readDataFile();
         }
         inputString = "";
         stringComplete = false;
@@ -63,3 +63,4 @@ void serialEventRun(){
         }
     }
 }
+

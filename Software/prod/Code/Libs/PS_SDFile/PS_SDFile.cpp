@@ -45,6 +45,7 @@ void PS_SDFile::setBuffer(char* p_newBuffer, size_t len){
         appendFile(SD, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
         fileBufferLen = 0;
     }
+}
 
 void PS_SDFile::readDataFile(){
     PS_SDFile::readFile(SD, "/data.csv");
