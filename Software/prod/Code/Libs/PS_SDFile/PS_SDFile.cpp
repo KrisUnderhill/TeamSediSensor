@@ -26,22 +26,6 @@ void PS_SDFile::init(){
     Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V, temp_ADC, temp_F");
 }
 
-void PS_SDFile::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
-    struct fileXferHeader* header = (struct fileXferHeader*) BLEfileBuffer;
-    File file = SD.open("/data.csv", FILE_READ);
-    MD5Builder md5;
-    md5.begin();
-    size_t maxLen = file.size();
-    md5.addStream(file, (const size_t)maxLen);
-    md5.calculate();
-    md5.getBytes(header->md5sum);
-    char output[33] = {0}; 
-    md5.getChars(output);
-    header->fileSize = maxLen;
-    *BLEfileBufferLen = sizeof(*header);
-    file.close();
-}
-
 void PS_SDFile::recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset){
     /* TODO: Make api decisions */
     memset(p_destBuffer, 0, *len);
@@ -54,11 +38,13 @@ void PS_SDFile::recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset){
 
 void PS_SDFile::setBuffer(char* p_newBuffer, size_t len){
     /* TODO Decide if this is the way to go or support api to write from outside buffer */
-    if(len > 0 && len < FILE_BUF_LEN){
-        memcpy((void*)p_fileBuffer, (const void*)p_newBuffer, len);
-        fileBufferLen = len;
+    if(len > 0 && len < FILE_BUF_LEN-fileBufferLen){
+        char* p_buf = &p_fileBuffer[fileBufferLen];
+        memcpy((void*)p_buf, (const void*)p_newBuffer, len);
+        fileBufferLen += len;
+        appendFile(SD, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
+        fileBufferLen = 0;
     }
-    appendFile(SD, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
 }
 
 void PS_SDFile::readDataFile(){
