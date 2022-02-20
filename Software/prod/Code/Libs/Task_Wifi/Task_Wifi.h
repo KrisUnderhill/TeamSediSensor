@@ -9,6 +9,9 @@
  */
 
 #include "Arduino.h"
+extern "C" {
+#include "esp_timer.h"
+}
 #include "../Config/config.h"
 #include "../Task_Measure/Task_Measure.h"
 #include "../PS_WifiServer/PS_WifiServer.h"
@@ -30,7 +33,12 @@ class TaskWifi {
 
         static volatile bool startWifi;
         static volatile bool runningWifi;
+        static volatile bool stopWifi;
         static volatile bool taskRunning;
+
+        static esp_timer_handle_t shutOffTimer;
+        static void shutOffTimerCallback(void* args);
+        static esp_timer_create_args_t shutOffTimerArgs;
 };
 #endif /* TASK_WIFI_H_ */
 

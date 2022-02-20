@@ -1,7 +1,7 @@
 #include "PS_WifiServer.h"
  
 WebServer wifiServer::server(80);
- 
+
 void wifiServer::handleNotFound() {
     Serial.println("GOT FILE Request");
     String dataFile = "/data.csv";

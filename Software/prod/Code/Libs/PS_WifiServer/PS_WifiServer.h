@@ -19,6 +19,7 @@ class wifiServer {
         static void start();
         static void stop();
         static void run();
+        static uint8_t getNumConnected() { return WiFi.softAPgetStationNum(); }
     private:
         static void handleNotFound();
         static void handleGet();
