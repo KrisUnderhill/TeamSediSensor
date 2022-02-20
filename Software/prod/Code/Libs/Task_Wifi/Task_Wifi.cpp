@@ -59,6 +59,7 @@ void TaskWifi::startServer(){
 
 void TaskWifi::stopServer(){
     wifiServer::stop();
+    esp_timer_stop(shutOffTimer);
     TaskMeasure::resumeTask();
 }
 
