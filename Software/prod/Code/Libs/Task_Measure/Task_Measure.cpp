@@ -21,7 +21,7 @@
 #define LEDC_OUTPUT_IO          LED_PIN
 #define LEDC_CHANNEL            LEDC_CHANNEL_0
 #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-#define LEDC_DUTY_ON            (8190) // Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
+#define LEDC_DUTY_ON            (8192) // Set duty to 100% 
 #define LEDC_DUTY_OFF           (0) // Set duty to 0%.
 #define LEDC_FREQUENCY          (5000) // Frequency in Hertz. Set frequency at 5 kHz
 
