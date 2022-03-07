@@ -150,9 +150,10 @@ void TaskMeasure::run(){
                     tempAdc, getTempFromAdc(tempAdc));
             Serial.printf("%s\r", timeCStr);
             File f;
-            PS_FileSystem::open(&f, DATA, FILE_APPEND);
-            f.write((const uint8_t*)timeCStr, strlen(timeCStr));
-            PS_FileSystem::close(DATA);
+            if(PS_FileSystem::open(&f, DATA, FILE_APPEND)){
+                f.write((const uint8_t*)timeCStr, strlen(timeCStr));
+                PS_FileSystem::close(DATA);
+            }
             readyToSleep = true;
         }
     }

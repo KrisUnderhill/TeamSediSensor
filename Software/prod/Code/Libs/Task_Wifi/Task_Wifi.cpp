@@ -43,7 +43,6 @@ void TaskWifi::run(){
             readyToSleep = false;
             startServer();
             esp_timer_start_periodic(shutOffTimer, 30*1000000);
-            TaskMeasure::pauseTask();
         }
         if(runningWifi){
             wifiServer::run();
@@ -69,7 +68,6 @@ void TaskWifi::startServer(){
 void TaskWifi::stopServer(){
     wifiServer::stop();
     esp_timer_stop(shutOffTimer);
-    TaskMeasure::resumeTask();
 }
 
 void TaskWifi::shutOffTimerCallback(void* args){

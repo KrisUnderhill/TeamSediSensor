@@ -69,13 +69,15 @@ void loop()
 }
 
 void sleep(){
-    if(TaskMeasure::getReadyToSleep() && TaskWifi::getReadyToSleep()){
-        Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) +
-        " Seconds");
-        Serial.flush(); 
-        esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, 1);
-        esp_sleep_enable_timer_wakeup(TaskMeasure::getTimeToSleep());
-        esp_deep_sleep_start();
+    if(!ALWAYS_ON){
+        if(TaskMeasure::getReadyToSleep() && TaskWifi::getReadyToSleep()){
+            Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) +
+            " Seconds");
+            Serial.flush(); 
+            esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, 1);
+            esp_sleep_enable_timer_wakeup(TaskMeasure::getTimeToSleep());
+            esp_deep_sleep_start();
+        }
     }
 }
 
