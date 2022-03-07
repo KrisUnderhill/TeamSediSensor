@@ -169,9 +169,15 @@ namespace "app" do
     cfgLib = File.join($OS_Config[:codePath], "Libs", "Config")
     FileUtils.mkdir(cfgLib) unless File.exist?(cfgLib)
     file = <<~EOF
+      #ifndef CONFIG_H_
+      #define CONFIG_H_
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
+      #define TIME_ZONE "EST+5EDT,M3.2.0/2,M11.1.0/2"
       #define USE_FFAT 1
+      #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
+      #define TIME_TO_SLEEP  15           /* Time ESP32 will go to sleep (in seconds) */
+      #endif  /* CONFIG_H_ */
     EOF
     File.write(File.join(cfgLib, "config.h"), file)
   end

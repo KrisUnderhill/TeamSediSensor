@@ -21,7 +21,8 @@ typedef enum fileIndex {DATA, HOME, ICON} fileIndex;
 
 class PS_FileSystem {
     public: 
-        static void init();
+        static void fullInit();
+        static void wakeInit();
         static bool open(File* f, int index, const char* mode);
         static void close(int index);
         static void getmd5Sum(char* output, const char* path);
