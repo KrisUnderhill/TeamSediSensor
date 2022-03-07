@@ -10,12 +10,19 @@
 
 uint16_t PS_FileSystem::fileLocks = 0;
 
-void PS_FileSystem::init(){
+void PS_FileSystem::fullInit(){
     if(!fileSystem.begin()){
         Serial.println("FileSystem Mount Failed");
         return;
     }
     verifyFileSystem();
+}
+
+void PS_FileSystem::wakeInit(){
+    if(!fileSystem.begin()){
+        Serial.println("FileSystem Mount Failed");
+        return;
+    }
 }
 
 bool PS_FileSystem::open(File* f, int index, const char*  mode){

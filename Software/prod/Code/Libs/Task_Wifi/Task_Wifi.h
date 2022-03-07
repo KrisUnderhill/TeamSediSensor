@@ -17,15 +17,17 @@ extern "C" {
 #include "../PS_WifiServer/PS_WifiServer.h"
 #include "../PS_FileSystem/PS_FileSystem.h"
 
-#define BUTTON_PIN 21
+#define BUTTON_PIN 33
 
 class TaskWifi {
     public: 
-        static void init();
+        static void fullInit();
+        static void wakeInit();
         static void run();
         static void resumeTask() { taskRunning = true;  }
         static void pauseTask()  { taskRunning = false; }
-
+        static bool getReadyToSleep() { return readyToSleep; }
+        static void callIntr() { buttonInt(); }
     private:
         static void startServer();
         static void stopServer();
@@ -35,6 +37,7 @@ class TaskWifi {
         static volatile bool runningWifi;
         static volatile bool stopWifi;
         static volatile bool taskRunning;
+        static bool readyToSleep;
 
         static esp_timer_handle_t shutOffTimer;
         static void shutOffTimerCallback(void* args);

@@ -15,7 +15,6 @@
 #include "../PS_FileSystem/PS_FileSystem.h"
 /* #include timer stuff - done automatically by Arduino IDE */
 
-#define MSG_LEN 500
 #define LEDC_TIMER              LEDC_TIMER_1
 #define LEDC_MODE               LEDC_LOW_SPEED_MODE
 #define LEDC_OUTPUT_IO          LED_PIN
@@ -29,30 +28,26 @@ volatile bool TaskMeasure::taskRunning = true;
 int TaskMeasure::activeReading = 0;
 int TaskMeasure::darkReading = 0;
 int TaskMeasure::tempAdc = 0;
-hw_timer_t * TaskMeasure::timer = NULL;
-volatile SemaphoreHandle_t TaskMeasure::timerSemaphore = xSemaphoreCreateBinary();
 char TaskMeasure::timeCStr[MSG_LEN] = {0};
+bool TaskMeasure::readyToSleep = false;
+int64_t TaskMeasure::nextRun = 0;
 
-void TaskMeasure::init(){
+void TaskMeasure::fullInit(){
     /* init file system here */
-    PS_FileSystem::init();
+    PS_FileSystem::fullInit();
 
     /* setup pins */
     pinMode(PHOTOTRANSISTOR_PIN, OUTPUT);
 
     /* Time setup - hacked from SimpleTime example and idf docs*/
-    setenv("TZ", "EST+5EDT,M3.2.0/2,M11.1.0/2", 1); /* hardcoded eastern */
+    setenv("TZ", TIME_ZONE, 1); /* hardcoded eastern */
     tzset();
     struct timeval tv;
     tv.tv_sec = TIME_SEC;
     tv.tv_usec = TIME_USEC;
     settimeofday(&tv, NULL);
 
-    /* setup Timers - see timer example*/
-    timer = timerBegin(0, 80, true); /* Timer # 0, 80 prescaler (us), count-up true */
-    timerAttachInterrupt(timer, &TimerISR, true); /* attach ISR to interrupt */
-    timerAlarmWrite(timer, 5000000, true); /* Timer fires every 5,000,000 us (5s), repeat true */
-    timerAlarmEnable(timer); /* Enable timer alarms */
+    nextRun = getuSecs() + TIME_TO_SLEEP*uS_TO_S_FACTOR;
 
     /* setup LEDC to control LED */
     ledc_timer_config_t ledc_timer = {
@@ -78,9 +73,51 @@ void TaskMeasure::init(){
     ledc_channel_config(&ledc_channel);
 }
 
+void TaskMeasure::wakeInit(){
+    PS_FileSystem::wakeInit();
+
+    pinMode(PHOTOTRANSISTOR_PIN, OUTPUT);
+
+    /* reset timezone to eastern, not preserved through reset */
+    setenv("TZ", TIME_ZONE, 1); /* hardcoded eastern */
+
+    /* setup LEDC to control LED */
+    ledc_timer_config_t ledc_timer = {
+        LEDC_MODE,
+        LEDC_DUTY_RES,
+        LEDC_TIMER,
+        LEDC_FREQUENCY,  // Set output frequency at 5 kHz
+    };
+
+    ledc_timer_config(&ledc_timer);
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel = {
+        .gpio_num       = LEDC_OUTPUT_IO,
+        .speed_mode     = LEDC_MODE,
+        .channel        = LEDC_CHANNEL,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .timer_sel      = LEDC_TIMER,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+
+    ledc_channel_config(&ledc_channel);
+
+}
+
+int64_t TaskMeasure::getuSecs(){
+    struct timeval tv_now;
+    gettimeofday(&tv_now, NULL);
+    int64_t time_us = ((int64_t)tv_now.tv_sec * uS_TO_S_FACTOR + (int64_t)tv_now.tv_usec);
+    //Serial.println(time_us);
+    return time_us;
+}
+
 void TaskMeasure::run(){
     if(taskRunning) {
-        if(xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
+        if(getuSecs() > nextRun){
+            nextRun += TIME_TO_SLEEP*uS_TO_S_FACTOR;
             digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
             delay(2000);
             /* Read Dark Current */
@@ -113,9 +150,11 @@ void TaskMeasure::run(){
                     tempAdc, getTempFromAdc(tempAdc));
             Serial.printf("%s\r", timeCStr);
             File f;
-            PS_FileSystem::open(&f, DATA, FILE_APPEND);
-            f.write((const uint8_t*)timeCStr, strlen(timeCStr));
-            PS_FileSystem::close(DATA);
+            if(PS_FileSystem::open(&f, DATA, FILE_APPEND)){
+                f.write((const uint8_t*)timeCStr, strlen(timeCStr));
+                PS_FileSystem::close(DATA);
+            }
+            readyToSleep = true;
         }
     }
 }

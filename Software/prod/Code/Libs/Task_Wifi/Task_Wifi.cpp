@@ -11,6 +11,7 @@ volatile bool TaskWifi::startWifi = false;
 volatile bool TaskWifi::runningWifi = false;
 volatile bool TaskWifi::stopWifi = false;
 volatile bool TaskWifi::taskRunning = true;
+bool TaskWifi::readyToSleep = true;
 esp_timer_handle_t TaskWifi::shutOffTimer;
 esp_timer_create_args_t TaskWifi::shutOffTimerArgs = {
     .callback = &shutOffTimerCallback,
@@ -21,8 +22,14 @@ void IRAM_ATTR TaskWifi::buttonInt(){
     startWifi = true;
 }
 
-void TaskWifi::init(){
+void TaskWifi::fullInit(){
     /* Add intr to start Wifi Server */
+    pinMode(BUTTON_PIN, INPUT_PULLDOWN);
+    attachInterrupt(BUTTON_PIN, buttonInt, RISING);
+    esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
+}
+
+void TaskWifi::wakeInit(){
     pinMode(BUTTON_PIN, INPUT_PULLUP);
     attachInterrupt(BUTTON_PIN, buttonInt, FALLING);
     esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
@@ -33,9 +40,9 @@ void TaskWifi::run(){
         if(startWifi) {
             startWifi = false;
             runningWifi = true;
+            readyToSleep = false;
             startServer();
             esp_timer_start_periodic(shutOffTimer, 30*1000000);
-            TaskMeasure::pauseTask();
         }
         if(runningWifi){
             wifiServer::run();
@@ -46,9 +53,10 @@ void TaskWifi::run(){
             }
         }
         if(stopWifi) {
+            TaskWifi::stopServer();
             runningWifi = false;
             stopWifi = false;
-            TaskWifi::stopServer();
+            readyToSleep = true;
         }
     }
 }
@@ -60,7 +68,6 @@ void TaskWifi::startServer(){
 void TaskWifi::stopServer(){
     wifiServer::stop();
     esp_timer_stop(shutOffTimer);
-    TaskMeasure::resumeTask();
 }
 
 void TaskWifi::shutOffTimerCallback(void* args){

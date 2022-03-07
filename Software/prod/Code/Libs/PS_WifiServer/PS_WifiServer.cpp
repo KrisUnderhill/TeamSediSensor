@@ -26,10 +26,8 @@ void wifiServer::handleNotFound() {
 void wifiServer::loadDataFile(){
     String dataType = "application/octet-stream";
     File dataFile; 
-    PS_FileSystem::open(&dataFile, DATA, FILE_READ);
-
-    if (!dataFile) {
-        Serial.println("Could not return file");
+    if(!PS_FileSystem::open(&dataFile, DATA, FILE_READ)){
+        Serial.println("Could not open file");
         return;
     }
   
@@ -43,9 +41,8 @@ void wifiServer::loadDataFile(){
 void wifiServer::loadIcon(){
     String iconType = "image/x-icon";
     File iconFile; 
-    PS_FileSystem::open(&iconFile, ICON, FILE_READ);
 
-    if (!iconFile) {
+    if (!PS_FileSystem::open(&iconFile, ICON, FILE_READ)) {
         Serial.println("Could not return file");
         return;
     }
@@ -61,9 +58,8 @@ void wifiServer::handleGet() {
     Serial.println("GOT FILE Request");
     String htmlType = "text/html";
     File htmlFile;
-    PS_FileSystem::open(&htmlFile, HOME, FILE_READ);
 
-    if (!htmlFile) {
+    if (!PS_FileSystem::open(&htmlFile, HOME, FILE_READ)){
         Serial.println("Could not return file");
         return;
     }

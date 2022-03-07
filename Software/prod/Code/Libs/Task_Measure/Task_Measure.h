@@ -3,19 +3,22 @@
 
 #include "Arduino.h"
 #include <time.h>
-#include "../Task_BLE/Task_BLE.h"
 #include "../PS_FileSystem/PS_FileSystem.h"
 
 #define PHOTOTRANSISTOR_PIN 32
+#define MSG_LEN 500
 
 class TaskMeasure {
     public: 
-        static void init();
+        static void fullInit();
+        static void wakeInit();
         static void run();
         static void pauseTask() { taskRunning = false; }
         static void resumeTask() { taskRunning = true; }
+        static bool getReadyToSleep() { return readyToSleep; }
+        static int64_t getTimeToSleep() { return (nextRun - getuSecs()); }
     private:
-        static volatile bool taskRunning;
+        static int64_t getuSecs();
         static void IRAM_ATTR TimerISR();
         static double getVoltageFromAdc(int adcReading);
         static double getTempFromAdc(int adcReading);
@@ -30,7 +33,10 @@ class TaskMeasure {
         static int tempAdc;
         static hw_timer_t * timer;
         static volatile SemaphoreHandle_t timerSemaphore;
-        static char timeCStr[BLE_MSG_LEN];
+        static char timeCStr[MSG_LEN];
+        static bool readyToSleep;
+        static volatile bool taskRunning;
+        static RTC_DATA_ATTR int64_t nextRun;
 };
 
 #endif /* TASK_MEASURE_H_ */

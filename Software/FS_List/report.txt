@@ -1,6 +1,0 @@
-running with measure every 5 sec, from (2022-01-12 17:41:32) to (2022-01-12 20:21:22)
-bluetooth connected the whole time
-Total space:    1458176
-Free space:    1409024
-Listing directory: /
-  FILE: /data.csv       SIZE: 48144

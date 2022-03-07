@@ -1,28 +1,62 @@
 #include "Arduino.h"
 #include "PS_FFat.h"
+#include <MD5Builder.h>
 
 /* file interaction functions are from the arduino FFat_Test ESP32 example
  * Modified for TSS_Sensor project by Kris Miedema
  */
+#define FORMAT_FFAT false
+#define DATA_FILE_NAME "/data.csv"
 
 char PS_FFat::p_fileBuffer[FILE_BUF_LEN] = {0};
 size_t PS_FFat::fileBufferLen = 0;
 
-void PS_FFat::init(){
+struct fileXferHeader {
+    uint8_t md5sum[16];
+    size_t fileSize;
+};
+
+void PS_FFat::fullInit(){
     if(FORMAT_FFAT) FFat.format();
     if(!FFat.begin()){
         Serial.println("FFat Mount Failed");
         return;
     }
-    PS_FFat::writeFile(FFat, (const char *)DATA_FILE_NAME, "#time, ADC Voltage,\n");
+    writeFile(FFat, (const char*)DATA_FILE_NAME, "#time, dark_ADC, dark_V, active_ADC, active_V\n");
+    Serial.println("#time, dark_ADC, dark_V, active_ADC, active_V");
 }
 
-void PS_FFat::recvBuffer(char* p_destBuffer, size_t* len){
-    /* TODO: Decide how to do this read section of a file */
-    //if(len > 0 && len < MSG_LEN){
-    //    memcpy((void*)p_msgBuffer, (const void*)p_newBuffer, len);
-    //    msgBufferLen = len;
-    //}
+void PS_FFat::wakeInit(){
+    if(!FFat.begin()){
+        Serial.println("FFat Mount Failed");
+        return;
+    }
+}
+
+void PS_FFat::initializeFileBuffer(uint8_t* BLEfileBuffer, size_t* BLEfileBufferLen){
+    struct fileXferHeader* header = (struct fileXferHeader*) BLEfileBuffer;
+    File file = FFat.open("/data.csv", FILE_READ);
+    MD5Builder md5;
+    md5.begin();
+    size_t maxLen = file.size();
+    md5.addStream(file, (const size_t)maxLen);
+    md5.calculate();
+    md5.getBytes(header->md5sum);
+    char output[33] = {0}; 
+    md5.getChars(output);
+    header->fileSize = maxLen;
+    *BLEfileBufferLen = sizeof(*header);
+    file.close();
+}
+
+void PS_FFat::recvBuffer(uint8_t* p_destBuffer, size_t* len, size_t* offset){
+    /* TODO: Make api decisions */
+    memset(p_destBuffer, 0, *len);
+    File file = FFat.open("/data.csv", FILE_READ);
+    file.seek(*offset);
+    *len = file.read(p_destBuffer, *len);
+    *offset = file.position();
+    file.close();
 }
 
 void PS_FFat::setBuffer(char* p_newBuffer, size_t len){
@@ -31,11 +65,11 @@ void PS_FFat::setBuffer(char* p_newBuffer, size_t len){
         memcpy((void*)p_fileBuffer, (const void*)p_newBuffer, len);
         fileBufferLen = len;
     }
-    PS_FFat::appendFile(FFat, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
+    appendFile(FFat, (const char*)DATA_FILE_NAME, (const char *)p_fileBuffer);
 }
 
 void PS_FFat::readDataFile(){
-    PS_FFat::readFile(FFat, DATA_FILE_NAME);
+    PS_FFat::readFile(FFat, "/data.csv");
 }
 
 void PS_FFat::readFile(fs::FS &fs, const char * path){
@@ -59,7 +93,9 @@ void PS_FFat::readFile(fs::FS &fs, const char * path){
         }
     }
     file.close();
+    Serial.println("File Read Complete");
 }
+
 
 void PS_FFat::writeFile(fs::FS &fs, const char * path, const char * message){
     //Serial.printf("Writing file: %s\r\n", path);
@@ -90,6 +126,17 @@ void PS_FFat::appendFile(fs::FS &fs, const char * path, const char * message){
     } else {
         Serial.println("- append failed");
     }
+    file.close();
+}
+
+void PS_FFat::getmd5Sum(char * output, const char * path){
+    File file = FFat.open(path, FILE_READ);
+    MD5Builder md5;
+    md5.begin();
+    size_t maxLen = file.size();
+    md5.addStream(file, (const size_t)maxLen);
+    md5.calculate();
+    md5.getChars(output);
     file.close();
 }
 
