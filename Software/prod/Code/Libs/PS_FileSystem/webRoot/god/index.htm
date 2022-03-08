@@ -15,8 +15,21 @@
         font-size: 20px;
     }
   </style>
+  <script>
+      function onBodyLoad() {
+          console.log("HELLO WORLD");
+          const Http = new XMLHttpRequest();
+          const url = "http://tss.local/god/measure.txt";
+          Http.open("GET", url);
+          Http.send();
+
+          Http.onreadystatechange = (e)=> {
+              console.log(Http.responseText)
+          }
+      }
+  </script>
 </head>
-<body id="index">
+<body onload="onBodyLoad();">
   <h1>Team Sedi Sensor: Device </h1>
   <p>
   Latest Measurement: <i>No Measurement Since Connected</i>
