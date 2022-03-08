@@ -70,6 +70,22 @@ void wifiServer::handleGet() {
     PS_FileSystem::close(HOME);
 }
 
+void wifiServer::handleGodMode() {
+    Serial.println("GOT FILE Request");
+    String htmlType = "text/html";
+    File htmlFile;
+
+    if (!PS_FileSystem::open(&htmlFile, GOD_HOME, FILE_READ)){
+        Serial.println("Could not return file");
+        return;
+    }
+    if (server.streamFile(htmlFile, htmlType) != htmlFile.size()) {
+      Serial.println("Sent less data than expected!");
+    }
+
+    PS_FileSystem::close(GOD_HOME);
+}
+
 void wifiServer::start(){
     Serial.println("Configuring access point...");
 
@@ -91,6 +107,7 @@ void wifiServer::start(){
     }
 
     server.on("/", HTTP_GET, handleGet);
+    server.on("/god/", HTTP_GET, handleGodMode);
     server.onNotFound(handleNotFound);
 
     server.begin();

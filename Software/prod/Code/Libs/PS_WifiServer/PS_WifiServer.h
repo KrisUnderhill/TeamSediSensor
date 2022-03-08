@@ -23,6 +23,7 @@ class wifiServer {
     private:
         static void handleNotFound();
         static void handleGet();
+        static void handleGodMode();
         static void loadDataFile();
         static void loadIcon();
 
