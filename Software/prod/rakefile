@@ -15,11 +15,11 @@ if OS.windows?
   arduinoConfigPath = `echo %LOCALAPPDATA%`
   arduinoConfigPath.delete!("\n")
   arduinoConfigPath.tr!("\\", "/")
-  userPath = `echo %USERHOME%`
+  userPath = `echo %userprofile%`
   userPath.delete!("\n")
   userPath.tr!("\\", "/")
-  $OS_Config[:idePath] = File.join(userPath, "Arduino")
-  $OS_Config[:libPath] = File.join(userPath, "Arduino", "libraries")
+  $OS_Config[:idePath] = File.join(userPath, "Documents", "Arduino")
+  $OS_Config[:libPath] = File.join(userPath, "Documents", "Arduino", "libraries")
   $OS_Config[:prefPath] = File.join(arduinoConfigPath, "Arduino15")
   $OS_Config[:serialPort] = "COM4"
   $OS_Config[:osType] = "Windows"
@@ -48,6 +48,9 @@ namespace "app" do
 
   desc 'copy webRoot folder into appropriate C readable string files'
   task :copyWebFiles do
+    #redesign so this works on both for now only builds correctly on linux
+    next if $OS_Config[:osType].match?("Windows") 
+
     fileDir = File.join("Code", "Libs", "PS_FileSystem")
     webRootDir = File.join(fileDir, "webRoot")
     File.open(File.join(fileDir, "webFiles.h"), "w") do |writeFile|
