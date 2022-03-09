@@ -20,9 +20,9 @@
 #define LEDC_OUTPUT_IO          LED_PIN
 #define LEDC_CHANNEL            LEDC_CHANNEL_0
 #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-#define LEDC_DUTY_ON            (1638) // Set duty to 100% 
+#define LEDC_DUTY_ON            (1638) // Set duty to 20% 
 #define LEDC_DUTY_OFF           (0) // Set duty to 0%.
-#define LEDC_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 5 kHz
+#define LEDC_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 1 kHz
 
 volatile bool TaskMeasure::taskRunning = true;
 int TaskMeasure::activeReading = 0;
