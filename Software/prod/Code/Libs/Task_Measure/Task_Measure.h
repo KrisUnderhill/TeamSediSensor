@@ -8,6 +8,8 @@
 #define PHOTOTRANSISTOR_PIN 32
 #define MSG_LEN 500
 
+enum TaskMeasureStates {WAITING, AMB_MEASURE, LED_ON, ACT_MEASURE, LED_OFF, COMPUTE_MEASURE};
+
 class TaskMeasure {
     public: 
         static void fullInit();
@@ -38,6 +40,8 @@ class TaskMeasure {
         static bool readyToSleep;
         static volatile bool taskRunning;
         static RTC_DATA_ATTR int64_t nextRun;
+        static unsigned long lastStateChange;
+        static enum TaskMeasureStates taskMeasureState;
 };
 
 #endif /* TASK_MEASURE_H_ */
