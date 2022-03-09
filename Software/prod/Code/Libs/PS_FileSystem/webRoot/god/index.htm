@@ -34,6 +34,16 @@
     .small_p_spacing {
         margin: 0px;
     }
+    #downloadButton {
+        background-color: #C80000;
+        color: snow;
+        border: 2px solid snow;
+        border-radius: 25px;
+        padding: 20px 30px;
+        margin: 20px 20px;
+        text-decoration: none;
+        display:inline-block;
+    }
   </style>
   <script>
       function requestUpdate() {
@@ -50,6 +60,18 @@
               }
           }
           setTimeout(requestUpdate, 1000);
+      }
+      function downloadButton_OnOver(){
+          var button = document.getElementById("downloadButton");
+          button.style.backgroundColor = "#A40000";
+      }
+      function downloadButton_OnOut(){
+          var button = document.getElementById("downloadButton");
+          button.style.backgroundColor = "#C80000";
+      }
+      function downloadButton_OnClick(){
+          var button = document.getElementById("downloadButton");
+          button.style.backgroundColor = "#800000";
       }
   </script>
 </head>
@@ -79,8 +101,12 @@
       <td><span id="temp_f"></span> F</td>
     </tr>
   </table>
-  <p>
-    <a href="/data.csv" download="data.csv">Download File</a>
-  </p>
+  <div onClick="downloadButton_OnClick();" 
+       onmouseover="downloadButton_OnOver();"
+       onmouseout="downloadButton_OnOut();">
+    <a href="/data.csv" download="data.csv">
+      <p id="downloadButton">Download File</p>
+    </a>
+  </div>
 </body>
 </html>
