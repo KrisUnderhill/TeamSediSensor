@@ -17,6 +17,7 @@ class TaskMeasure {
         static void resumeTask() { taskRunning = true; }
         static bool getReadyToSleep() { return readyToSleep; }
         static int64_t getTimeToSleep() { return (nextRun - getuSecs()); }
+        static char* getMeasure() { return timeCStr; }
     private:
         static int64_t getuSecs();
         static void IRAM_ATTR TimerISR();

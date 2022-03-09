@@ -86,6 +86,11 @@ void wifiServer::handleGodMode() {
     PS_FileSystem::close(GOD_HOME);
 }
 
+void wifiServer::handleGetMeasure(){
+    Serial.println("GOT measure Request");
+    server.send(200, "text/plain", String(TaskMeasure::getMeasure()));
+}
+
 void wifiServer::start(){
     Serial.println("Configuring access point...");
 
@@ -108,6 +113,7 @@ void wifiServer::start(){
 
     server.on("/", HTTP_GET, handleGet);
     server.on("/god/", HTTP_GET, handleGodMode);
+    server.on("/god/measure.txt", HTTP_GET, handleGetMeasure);
     server.onNotFound(handleNotFound);
 
     server.begin();

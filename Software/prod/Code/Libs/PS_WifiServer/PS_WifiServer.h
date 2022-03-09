@@ -9,6 +9,7 @@
 #include <ESPmDNS.h>
 
 #include "../PS_FileSystem/PS_FileSystem.h"
+#include "../Task_Measure/Task_Measure.h"
 
 #define ssid "TSS"
 #define password "teamsedisensor"
@@ -24,6 +25,7 @@ class wifiServer {
         static void handleNotFound();
         static void handleGet();
         static void handleGodMode();
+        static void handleGetMeasure();
         static void loadDataFile();
         static void loadIcon();
 
