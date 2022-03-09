@@ -4,6 +4,15 @@
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
   <title>TSS God Mode</title>
   <style>
+    table {
+      border-collapse: collapse;
+    }
+    td, th {
+      text-align: left;
+      padding-left: 20px;
+      padding-right: 20px;
+      font-size: 20px;
+    }
     body {
       background-color:DimGray;
       color: snow;
@@ -11,13 +20,23 @@
     h1 {
         font-size: 40px;
     }
+    h2 {
+        margin: 0px;
+    }
+
     p {
         font-size: 20px;
+    }
+    .tab {
+        display: inline-block;
+        margin-left: 20px;
+    }
+    .small_p_spacing {
+        margin: 0px;
     }
   </style>
   <script>
       function onBodyLoad() {
-          console.log("HELLO WORLD");
           const Http = new XMLHttpRequest();
           const url = "http://tss.local/god/measure.txt";
           Http.open("GET", url);
@@ -25,9 +44,9 @@
 
           Http.onreadystatechange = (e)=> {
               if(!!Http.responseText){
-                  var currentMeasure = document.getElementById("currMeasure");
-                  currMeasure.innerHTML = "Latest Measurement: " + Http.responseText;
-                  console.log("Response Text is:", Http.responseText);
+                  var measureArr = Http.responseText.trim().split(',');
+                  var idArr = ["time", "amb_adc", "amb_volt", "act_adc", "act_volt", "temp_adc", "temp_f"];
+                  idArr.forEach((element,index) => document.getElementById(element).innerHTML = measureArr[index]);
               }
           }
       }
@@ -35,9 +54,31 @@
 </head>
 <body onload="onBodyLoad();">
   <h1>Team Sedi Sensor: Device </h1>
-  <p id="currMeasure">
-    Latest Measurement: <i>No Measurement Since Connected</i>
-  </p>
+    <!Latest Measurement: <i> <!No Measurement Since Connected</i>
+  <h2>Latest Measurement: </h2>
+    <p class="small_p_spacing"><span class="tab"></span>Time: <span id=time>No Measurement Since Connected</span></p> 
+  <table>
+    <tr>
+      <th></th>
+      <th>ADC Reading</th>
+      <th>Measurement</th>
+    </tr>
+    <tr>
+      <td>Amb Reading</td>
+      <td id="amb_adc"></td>
+      <td><span id="amb_volt"></span> V</td>
+    </tr>
+    <tr>
+      <td>Act Reading</td>
+      <td><span id="act_adc"></td>
+      <td><span id="act_volt"></span> V</td>
+    </tr>
+    <tr>
+      <td>Temp</td>
+      <td id="temp_adc"></td>
+      <td><span id="temp_f"></span> F</td>
+    </tr>
+  </table>
   <p>
     <a href="/data.csv" download="data.csv">Download File</a>
   </p>
