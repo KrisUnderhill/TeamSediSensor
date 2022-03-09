@@ -27,22 +27,32 @@ void TaskWifi::fullInit(){
     pinMode(BUTTON_PIN, INPUT_PULLDOWN);
     attachInterrupt(BUTTON_PIN, buttonInt, RISING);
     esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
+    if(WIFI_ALWAYS_ON){
+        runningWifi = true;
+        startServer();
+    }
 }
 
 void TaskWifi::wakeInit(){
     pinMode(BUTTON_PIN, INPUT_PULLUP);
     attachInterrupt(BUTTON_PIN, buttonInt, FALLING);
     esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
+    if(WIFI_ALWAYS_ON){
+        runningWifi = true;
+        startServer();
+    }
 }
 
 void TaskWifi::run(){
     if(taskRunning) {
-        if(startWifi) {
-            startWifi = false;
-            runningWifi = true;
-            readyToSleep = false;
-            startServer();
-            esp_timer_start_periodic(shutOffTimer, 30*1000000);
+        if(!WIFI_ALWAYS_ON){
+            if(startWifi) {
+                startWifi = false;
+                runningWifi = true;
+                readyToSleep = false;
+                startServer();
+                esp_timer_start_periodic(shutOffTimer, 30*1000000);
+            }
         }
         if(runningWifi){
             wifiServer::run();
@@ -73,6 +83,7 @@ void TaskWifi::stopServer(){
 void TaskWifi::shutOffTimerCallback(void* args){
     (void) args;
     if(wifiServer::getNumConnected() == 0) {
-        stopWifi = true;
+        if(!WIFI_ALWAYS_ON)
+            stopWifi = true;
     }
 }
