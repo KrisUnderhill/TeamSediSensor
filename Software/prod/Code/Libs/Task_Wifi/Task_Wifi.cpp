@@ -7,11 +7,8 @@
 
 #include "Task_Wifi.h"
 
-volatile bool TaskWifi::startWifi = false;
-volatile bool TaskWifi::runningWifi = false;
-volatile bool TaskWifi::stopWifi = false;
-volatile bool TaskWifi::taskRunning = true;
 bool TaskWifi::readyToSleep = true;
+enum TaskWifiStates TaskWifi::taskWifiState = TASK_WIFI_OFF;
 esp_timer_handle_t TaskWifi::shutOffTimer;
 esp_timer_create_args_t TaskWifi::shutOffTimerArgs = {
     .callback = &shutOffTimerCallback,
@@ -19,7 +16,8 @@ esp_timer_create_args_t TaskWifi::shutOffTimerArgs = {
 
 
 void IRAM_ATTR TaskWifi::buttonInt(){
-    startWifi = true;
+    if(taskWifiState == TASK_WIFI_OFF)
+        taskWifiState = TASK_WIFI_START;
 }
 
 void TaskWifi::fullInit(){
@@ -28,8 +26,7 @@ void TaskWifi::fullInit(){
     attachInterrupt(BUTTON_PIN, buttonInt, RISING);
     esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
     if(WIFI_ALWAYS_ON){
-        runningWifi = true;
-        startServer();
+        taskWifiState = TASK_WIFI_START;
     }
 }
 
@@ -38,36 +35,37 @@ void TaskWifi::wakeInit(){
     attachInterrupt(BUTTON_PIN, buttonInt, FALLING);
     esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
     if(WIFI_ALWAYS_ON){
-        runningWifi = true;
-        startServer();
+        taskWifiState = TASK_WIFI_START;
     }
 }
 
 void TaskWifi::run(){
-    if(taskRunning) {
-        if(!WIFI_ALWAYS_ON){
-            if(startWifi) {
-                startWifi = false;
-                runningWifi = true;
-                readyToSleep = false;
-                startServer();
-                esp_timer_start_periodic(shutOffTimer, 30*1000000);
-            }
-        }
-        if(runningWifi){
+    switch(taskWifiState){
+        case TASK_WIFI_OFF:
+            break;
+        case TASK_WIFI_START:
+            readyToSleep = false;
+            startServer();
+            esp_timer_start_periodic(shutOffTimer, 30*1000000);
+
+            taskWifiState = TASK_WIFI_RUN;
+            break;
+        case TASK_WIFI_RUN:
             wifiServer::run();
             static unsigned long last_millis = millis();
             if((millis()-last_millis) > 5000) {
                 Serial.printf("Number Connected is: %d\r\n", wifiServer::getNumConnected());
                 last_millis = millis();
             }
-        }
-        if(stopWifi) {
+            break;
+        case TASK_WIFI_STOP:
             TaskWifi::stopServer();
-            runningWifi = false;
-            stopWifi = false;
             readyToSleep = true;
-        }
+
+            taskWifiState = TASK_WIFI_OFF;
+            break;
+        default:
+            break;
     }
 }
 
@@ -84,6 +82,6 @@ void TaskWifi::shutOffTimerCallback(void* args){
     (void) args;
     if(wifiServer::getNumConnected() == 0) {
         if(!WIFI_ALWAYS_ON)
-            stopWifi = true;
+            taskWifiState = TASK_WIFI_STOP;
     }
 }

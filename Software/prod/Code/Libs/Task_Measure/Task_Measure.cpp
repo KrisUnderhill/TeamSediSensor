@@ -20,17 +20,19 @@
 #define LEDC_OUTPUT_IO          LED_PIN
 #define LEDC_CHANNEL            LEDC_CHANNEL_0
 #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-#define LEDC_DUTY_ON            (1638) // Set duty to 100% 
+#define LEDC_DUTY_ON            (1638) // Set duty to 20% 
 #define LEDC_DUTY_OFF           (0) // Set duty to 0%.
-#define LEDC_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 5 kHz
+#define LEDC_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 1 kHz
 
-volatile bool TaskMeasure::taskRunning = true;
 int TaskMeasure::activeReading = 0;
 int TaskMeasure::darkReading = 0;
 int TaskMeasure::tempAdc = 0;
 char TaskMeasure::timeCStr[MSG_LEN] = {0};
 bool TaskMeasure::readyToSleep = false;
 int64_t TaskMeasure::nextRun = 0;
+unsigned long TaskMeasure::lastStateChange = 0;
+enum TaskMeasureStates TaskMeasure::taskMeasureState = WAITING;
+
 
 void TaskMeasure::fullInit(){
     /* init file system here */
@@ -48,6 +50,7 @@ void TaskMeasure::fullInit(){
     settimeofday(&tv, NULL);
 
     nextRun = getuSecs() + TIME_TO_SLEEP*uS_TO_S_FACTOR;
+    taskMeasureState = WAITING;
 
     /* setup LEDC to control LED */
     ledc_timer_config_t ledc_timer = {
@@ -74,6 +77,7 @@ void TaskMeasure::fullInit(){
 }
 
 void TaskMeasure::wakeInit(){
+    taskMeasureState = WAITING;
     PS_FileSystem::wakeInit();
 
     pinMode(PHOTOTRANSISTOR_PIN, OUTPUT);
@@ -115,32 +119,57 @@ int64_t TaskMeasure::getuSecs(){
 }
 
 void TaskMeasure::run(){
-    if(taskRunning) {
-        if(getuSecs() > nextRun){
-            nextRun += TIME_TO_SLEEP*uS_TO_S_FACTOR;
-            digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
-            delay(2000);
-            /* Read Dark Current */
-            darkReading = analogRead(ADC_PIN);
+    static struct tm tm;
+    switch(taskMeasureState) {
+        case WAITING: {
+            if(getuSecs() > nextRun){
+                nextRun += TIME_TO_SLEEP*uS_TO_S_FACTOR;
+                digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
+                lastStateChange = millis();
+                taskMeasureState = AMB_MEASURE;
+            } 
+        } break; 
+        case AMB_MEASURE: {
+            if(millis() > lastStateChange + WAIT_PHOTOTRANSISTOR_ON_TO_AMB_MEASURE){
+                darkReading = analogRead(ADC_PIN);
+                lastStateChange = millis();
+                taskMeasureState = LED_ON;
+            }
+        } break;
+        case LED_ON: {
+            if(millis() > lastStateChange + WAIT_AMB_MEASURE_TO_LED_ON){
+                /* turn on LED */
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_ON);
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                lastStateChange = millis();
+                taskMeasureState = ACT_MEASURE;
+            }
+        } break;
+        case ACT_MEASURE: {
+            if(millis() > lastStateChange + WAIT_LED_ON_TO_ACT_MEASURE){
+                /* take reading */
+                activeReading = analogRead(ADC_PIN);
+                /* Take time */        
+                time_t t = time(NULL);
+                tm = *localtime(&t);
 
-            /* turn on LED */
-            ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_ON);
-            ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-            /* wait 0.5 sec */
-            delay(1500);
-            /* take reading */
-            activeReading = analogRead(ADC_PIN);
-            /* Take time */        
-            time_t t = time(NULL);
-            struct tm tm = *localtime(&t);
-            /* Wait 0.5 sec */
-            delay(500);
-            /* turn LED off */
-            ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_OFF);
-            ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                /* Take Temp */
+                tempAdc = analogRead(TEMP_PIN);
 
-            tempAdc = analogRead(TEMP_PIN);
-
+                lastStateChange = millis();
+                taskMeasureState = LED_OFF;
+            }
+        } break;
+        case LED_OFF: {
+            if(millis() > lastStateChange + WAIT_ACT_MEASURE_TO_LED_OFF){
+                /* turn on LED */
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_OFF);
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                lastStateChange = millis();
+                taskMeasureState = COMPUTE_MEASURE;
+            }
+        } break;
+        case COMPUTE_MEASURE: {
             /* Format string */
             sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f\n", 
                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
@@ -155,22 +184,22 @@ void TaskMeasure::run(){
                 PS_FileSystem::close(DATA);
             }
             readyToSleep = true;
-        }
+
+            lastStateChange = millis();
+            taskMeasureState = WAITING;
+        } break;
+        default:
+            break;
     }
 }
 
 double TaskMeasure::getVoltageFromAdc(int adcReading){
-    double voltage = ((double)adcReading/(double)maxAdcReading)*maxVoltage;
+    double voltage = ((double)adcReading/(double)MAX_ADC_READING)*MAX_VOLTAGE;
     return voltage;
 }
 
 double TaskMeasure::getTempFromAdc(int adcReading){
     double temp = getVoltageFromAdc(adcReading)/VOLTS_PER_DEG;
     return temp;
-}
-
-void IRAM_ATTR TaskMeasure::TimerISR(){
-  // Give a semaphore that we can check in the loop
-  xSemaphoreGiveFromISR(timerSemaphore, NULL);
 }
 
