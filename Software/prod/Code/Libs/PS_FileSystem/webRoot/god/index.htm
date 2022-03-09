@@ -36,7 +36,7 @@
     }
   </style>
   <script>
-      function onBodyLoad() {
+      function requestUpdate() {
           const Http = new XMLHttpRequest();
           const url = "http://tss.local/god/measure.txt";
           Http.open("GET", url);
@@ -49,12 +49,12 @@
                   idArr.forEach((element,index) => document.getElementById(element).innerHTML = measureArr[index]);
               }
           }
+          setTimeout(requestUpdate, 1000);
       }
   </script>
 </head>
-<body onload="onBodyLoad();">
+<body onload="requestUpdate();">
   <h1>Team Sedi Sensor: Device </h1>
-    <!Latest Measurement: <i> <!No Measurement Since Connected</i>
   <h2>Latest Measurement: </h2>
     <p class="small_p_spacing"><span class="tab"></span>Time: <span id=time>No Measurement Since Connected</span></p> 
   <table>

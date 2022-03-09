@@ -87,7 +87,6 @@ void wifiServer::handleGodMode() {
 }
 
 void wifiServer::handleGetMeasure(){
-    Serial.println("GOT measure Request");
     server.send(200, "text/plain", String(TaskMeasure::getMeasure()));
 }
 
