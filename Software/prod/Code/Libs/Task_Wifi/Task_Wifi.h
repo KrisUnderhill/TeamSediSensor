@@ -19,13 +19,13 @@ extern "C" {
 
 #define BUTTON_PIN 33
 
+enum TaskWifiStates {TASK_WIFI_OFF, TASK_WIFI_START, TASK_WIFI_RUN, TASK_WIFI_STOP};
+
 class TaskWifi {
     public: 
         static void fullInit();
         static void wakeInit();
         static void run();
-        static void resumeTask() { taskRunning = true;  }
-        static void pauseTask()  { taskRunning = false; }
         static bool getReadyToSleep() { return readyToSleep; }
         static void callIntr() { buttonInt(); }
     private:
@@ -33,10 +33,7 @@ class TaskWifi {
         static void stopServer();
         static void IRAM_ATTR buttonInt();
 
-        static volatile bool startWifi;
-        static volatile bool runningWifi;
-        static volatile bool stopWifi;
-        static volatile bool taskRunning;
+        static enum TaskWifiStates taskWifiState;
         static bool readyToSleep;
 
         static esp_timer_handle_t shutOffTimer;
