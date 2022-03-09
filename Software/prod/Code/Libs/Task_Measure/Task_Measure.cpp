@@ -24,7 +24,6 @@
 #define LEDC_DUTY_OFF           (0) // Set duty to 0%.
 #define LEDC_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 1 kHz
 
-volatile bool TaskMeasure::taskRunning = true;
 int TaskMeasure::activeReading = 0;
 int TaskMeasure::darkReading = 0;
 int TaskMeasure::tempAdc = 0;
@@ -131,14 +130,14 @@ void TaskMeasure::run(){
             } 
         } break; 
         case AMB_MEASURE: {
-            if(millis() > lastStateChange + 2000){
+            if(millis() > lastStateChange + WAIT_PHOTOTRANSISTOR_ON_TO_AMB_MEASURE){
                 darkReading = analogRead(ADC_PIN);
                 lastStateChange = millis();
                 taskMeasureState = LED_ON;
             }
         } break;
         case LED_ON: {
-            if(millis() > lastStateChange + 50){
+            if(millis() > lastStateChange + WAIT_AMB_MEASURE_TO_LED_ON){
                 /* turn on LED */
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_ON);
                 ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
@@ -147,7 +146,7 @@ void TaskMeasure::run(){
             }
         } break;
         case ACT_MEASURE: {
-            if(millis() > lastStateChange + 1500){
+            if(millis() > lastStateChange + WAIT_LED_ON_TO_ACT_MEASURE){
                 /* take reading */
                 activeReading = analogRead(ADC_PIN);
                 /* Take time */        
@@ -162,7 +161,7 @@ void TaskMeasure::run(){
             }
         } break;
         case LED_OFF: {
-            if(millis() > lastStateChange + 500){
+            if(millis() > lastStateChange + WAIT_ACT_MEASURE_TO_LED_OFF){
                 /* turn on LED */
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_OFF);
                 ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
@@ -195,7 +194,7 @@ void TaskMeasure::run(){
 }
 
 double TaskMeasure::getVoltageFromAdc(int adcReading){
-    double voltage = ((double)adcReading/(double)maxAdcReading)*maxVoltage;
+    double voltage = ((double)adcReading/(double)MAX_ADC_READING)*MAX_VOLTAGE;
     return voltage;
 }
 
