@@ -17,6 +17,7 @@ class TaskMeasure {
         static void resumeTask() { taskRunning = true; }
         static bool getReadyToSleep() { return readyToSleep; }
         static int64_t getTimeToSleep() { return (nextRun - getuSecs()); }
+        static char* getMeasure() { return timeCStr; }
     private:
         static int64_t getuSecs();
         static void IRAM_ATTR TimerISR();
@@ -25,7 +26,7 @@ class TaskMeasure {
         static const int ADC_PIN = 34;
         static const int LED_PIN = 22;
         static const int TEMP_PIN = 39;
-        static constexpr double maxVoltage = 3.9;
+        static constexpr double maxVoltage = 3.3;
         static const int maxAdcReading = 4095;
         static constexpr float VOLTS_PER_DEG = 0.010;
         static int darkReading;

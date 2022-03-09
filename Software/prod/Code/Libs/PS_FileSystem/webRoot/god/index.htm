@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>TSS God Mode</title>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+    td, th {
+      text-align: left;
+      padding-left: 20px;
+      padding-right: 20px;
+      font-size: 20px;
+    }
+    body {
+      background-color:DimGray;
+      color: snow;
+    }
+    h1 {
+        font-size: 40px;
+    }
+    h2 {
+        margin: 0px;
+    }
+
+    p {
+        font-size: 20px;
+    }
+    .tab {
+        display: inline-block;
+        margin-left: 20px;
+    }
+    .small_p_spacing {
+        margin: 0px;
+    }
+    #downloadButton {
+        background-color: #C80000;
+        color: snow;
+        border: 2px solid snow;
+        border-radius: 25px;
+        padding: 20px 30px;
+        margin: 20px 20px;
+        text-decoration: none;
+        display:inline-block;
+    }
+  </style>
+  <script>
+      function requestUpdate() {
+          const Http = new XMLHttpRequest();
+          const url = "http://tss.local/god/measure.txt";
+          Http.open("GET", url);
+          Http.send();
+
+          Http.onreadystatechange = (e)=> {
+              if(!!Http.responseText){
+                  var measureArr = Http.responseText.trim().split(',');
+                  var idArr = ["time", "amb_adc", "amb_volt", "act_adc", "act_volt", "temp_adc", "temp_f"];
+                  idArr.forEach((element,index) => document.getElementById(element).innerHTML = measureArr[index]);
+              }
+          }
+          setTimeout(requestUpdate, 1000);
+      }
+      function downloadButton_OnOver(){
+          var button = document.getElementById("downloadButton");
+          button.style.backgroundColor = "#A40000";
+      }
+      function downloadButton_OnOut(){
+          var button = document.getElementById("downloadButton");
+          button.style.backgroundColor = "#C80000";
+      }
+      function downloadButton_OnClick(){
+          var button = document.getElementById("downloadButton");
+          button.style.backgroundColor = "#800000";
+      }
+  </script>
+</head>
+<body onload="requestUpdate();">
+  <h1>Team Sedi Sensor: Device </h1>
+  <h2>Latest Measurement: </h2>
+    <p class="small_p_spacing"><span class="tab"></span>Time: <span id=time>No Measurement Since Connected</span></p> 
+  <table>
+    <tr>
+      <th></th>
+      <th>ADC Reading</th>
+      <th>Measurement</th>
+    </tr>
+    <tr>
+      <td>Amb Reading</td>
+      <td id="amb_adc"></td>
+      <td><span id="amb_volt"></span> V</td>
+    </tr>
+    <tr>
+      <td>Act Reading</td>
+      <td><span id="act_adc"></td>
+      <td><span id="act_volt"></span> V</td>
+    </tr>
+    <tr>
+      <td>Temp</td>
+      <td id="temp_adc"></td>
+      <td><span id="temp_f"></span> F</td>
+    </tr>
+  </table>
+  <div onClick="downloadButton_OnClick();" 
+       onmouseover="downloadButton_OnOver();"
+       onmouseout="downloadButton_OnOut();">
+    <a href="/data.csv" download="data.csv">
+      <p id="downloadButton">Download File</p>
+    </a>
+  </div>
+</body>
+</html>
