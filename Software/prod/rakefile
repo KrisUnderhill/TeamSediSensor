@@ -216,7 +216,14 @@ namespace "app" do
     STRING
 
     # This has a lot of extra functionality possibly useful
+    system flashCmd if File.exist?(binFile)
+  end
+
+  desc 'flash using OTA over HTTP'
+  task otaflash: [:setBuildPath, :build] do
+    binPath = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}")
     binFile = File.join($OS_Config[:buildPath], "#{$OS_Config[:dirName]}.ino.bin")
+    flashCmd = "curl -F \"image=@#{binFile}\" TSS.local/god/update/"
     system flashCmd if File.exist?(binFile)
   end
 
@@ -232,7 +239,7 @@ namespace "app" do
       #define TIME_SEC #{t.tv_sec}
       #define TIME_USEC #{t.tv_usec}
       #define TIME_ZONE "EST+5EDT,M3.2.0/2,M11.1.0/2"
-      #define USE_FFAT 0
+      //#define USE_FFAT 1
       #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
       #define TIME_TO_SLEEP  15          /* Time ESP33 will go to sleep (in seconds) */
       #define ALWAYS_ON false

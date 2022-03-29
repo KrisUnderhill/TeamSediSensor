@@ -7,9 +7,10 @@
 
 /* Pins */
 #define PHOTOTRANSISTOR_PIN 32
-#define ADC_PIN 34
+#define ADC_PIN 34 /* Phototransistor ADC */
 #define LED_PIN 22
 #define TEMP_PIN 39
+#define BATT_PIN 35
 
 /* Calculation Constants */
 #define VOLTS_PER_DEG 0.010
@@ -42,6 +43,7 @@ class TaskMeasure {
         static int darkReading;
         static int activeReading;
         static int tempAdc;
+        static int battAdc;
         static char timeCStr[MSG_LEN];
         static bool readyToSleep;
         static volatile bool taskRunning;

@@ -48,14 +48,18 @@
   <script>
       function requestUpdate() {
           const Http = new XMLHttpRequest();
-          const url = "http://tss.local/god/measure.txt";
+          const url = "http://tss.local/measure.txt";
           Http.open("GET", url);
           Http.send();
 
           Http.onreadystatechange = (e)=> {
               if(!!Http.responseText){
+                  const errorRegex = /ERROR 404/g;
+                  if(errorRegex.test(Http.responseText)){
+                      return;
+                  }
                   var measureArr = Http.responseText.trim().split(',');
-                  var idArr = ["time", "amb_adc", "amb_volt", "act_adc", "act_volt", "temp_adc", "temp_f"];
+                  var idArr = ["time", "amb_adc", "amb_volt", "act_adc", "act_volt", "temp_adc", "temp_f", "batt_adc", "batt_v"];
                   idArr.forEach((element,index) => document.getElementById(element).innerHTML = measureArr[index]);
               }
           }
@@ -99,6 +103,11 @@
       <td>Temp</td>
       <td id="temp_adc"></td>
       <td><span id="temp_f"></span> F</td>
+    </tr>
+    <tr> 
+      <td>Batt</td>
+      <td id="batt_adc"></td>
+      <td><span id="batt_v"></span> V</td>
     </tr>
   </table>
   <div onClick="downloadButton_OnClick();" 

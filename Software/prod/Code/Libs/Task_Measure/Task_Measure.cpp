@@ -27,6 +27,7 @@
 int TaskMeasure::activeReading = 0;
 int TaskMeasure::darkReading = 0;
 int TaskMeasure::tempAdc = 0;
+int TaskMeasure::battAdc = 0;
 char TaskMeasure::timeCStr[MSG_LEN] = {0};
 bool TaskMeasure::readyToSleep = false;
 int64_t TaskMeasure::nextRun = 0;
@@ -155,6 +156,9 @@ void TaskMeasure::run(){
 
                 /* Take Temp */
                 tempAdc = analogRead(TEMP_PIN);
+                
+                /* Take Batt */
+                battAdc = analogRead(BATT_PIN);
 
                 lastStateChange = millis();
                 taskMeasureState = LED_OFF;
@@ -171,12 +175,13 @@ void TaskMeasure::run(){
         } break;
         case COMPUTE_MEASURE: {
             /* Format string */
-            sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f\n", 
+            sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f, %d, %.3f\n", 
                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                     tm.tm_hour, tm.tm_min, tm.tm_sec, 
                     darkReading, getVoltageFromAdc(darkReading), 
                     activeReading, getVoltageFromAdc(activeReading),
-                    tempAdc, getTempFromAdc(tempAdc));
+                    tempAdc, getTempFromAdc(tempAdc),
+                    battAdc, getVoltageFromAdc(battAdc));
             Serial.printf("%s\r", timeCStr);
             File f;
             if(PS_FileSystem::open(&f, DATA, FILE_APPEND)){

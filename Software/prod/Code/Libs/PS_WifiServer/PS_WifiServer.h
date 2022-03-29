@@ -7,6 +7,7 @@
 #include <WiFiAP.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
+#include <HTTPUpdateServer.h>
 
 #include "../PS_FileSystem/PS_FileSystem.h"
 #include "../Task_Measure/Task_Measure.h"
@@ -30,6 +31,7 @@ class wifiServer {
         static void loadIcon();
 
         static WebServer server;
+        static HTTPUpdateServer httpUpdater;
 };
 
 #endif /*_WIFI_SERVER_H_*/

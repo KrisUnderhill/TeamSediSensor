@@ -1,6 +1,7 @@
 #include "PS_WifiServer.h"
  
 WebServer wifiServer::server(80);
+HTTPUpdateServer wifiServer::httpUpdater;
 
 void wifiServer::handleNotFound() {
     Serial.println("GOT FILE Request");
@@ -104,6 +105,7 @@ void wifiServer::start(){
 
     Serial.println("Server started");
 
+
     if (MDNS.begin(host)) {
       MDNS.addService("http", "tcp", 80);
       Serial.println("MDNS responder started");
@@ -113,9 +115,10 @@ void wifiServer::start(){
     }
 
     server.on("/", HTTP_GET, handleGet);
+    server.on("/measure.txt", HTTP_GET, handleGetMeasure);
 #if GOD_MODE_ENABLED == true
     server.on("/god/", HTTP_GET, handleGodMode);
-    server.on("/god/measure.txt", HTTP_GET, handleGetMeasure);
+    httpUpdater.setup(&server, "/god/update/");
 #endif
     server.onNotFound(handleNotFound);
 
