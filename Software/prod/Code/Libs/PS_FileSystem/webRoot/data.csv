@@ -1,1 +1,1 @@
-#time, dark_ADC, dark_V, active_ADC, active_V, temp_ADC, temp_F
+#time, dark_ADC, dark_V, active_ADC, active_V, temp_ADC, temp_F, batt_ADC, batt_V, diff_ADC, diff_V
