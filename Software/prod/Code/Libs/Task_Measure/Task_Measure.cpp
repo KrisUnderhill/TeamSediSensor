@@ -77,6 +77,7 @@ void TaskMeasure::fullInit(){
     };
 
     ledc_channel_config(&ledc_channel);
+    readyToSleep = true;
 }
 
 void TaskMeasure::wakeInit(){
@@ -227,10 +228,11 @@ void TaskMeasure::run(){
                 f.write((const uint8_t*)timeCStr, strlen(timeCStr));
                 PS_FileSystem::close(DATA);
             }
-            readyToSleep = true;
 
             lastStateChange = millis();
             taskMeasureState = WAITING;
+
+            readyToSleep = true;
         } break;
         default:
             break;
