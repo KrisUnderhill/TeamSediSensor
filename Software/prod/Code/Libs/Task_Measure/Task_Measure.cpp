@@ -124,6 +124,7 @@ void TaskMeasure::run(){
     switch(taskMeasureState) {
         case WAITING: {
             if(getuSecs() > nextRun){
+                Serial.printf("State Waiting, time: %ld\n", millis());
                 nextRun += TIME_TO_SLEEP*uS_TO_S_FACTOR;
                 digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
                 lastStateChange = millis();
@@ -132,13 +133,16 @@ void TaskMeasure::run(){
         } break; 
         case AMB_MEASURE: {
             if(millis() > lastStateChange + WAIT_PHOTOTRANSISTOR_ON_TO_AMB_MEASURE){
+                Serial.printf("State amb Measure, time: %ld ", millis());
                 darkReading = analogRead(ADC_PIN);
+                Serial.printf("adc: %d\n", darkReading);
                 lastStateChange = millis();
                 taskMeasureState = LED_ON;
             }
         } break;
         case LED_ON: {
             if(millis() > lastStateChange + WAIT_AMB_MEASURE_TO_LED_ON){
+                Serial.printf("State led on, time: %ld\n", millis());
                 /* turn on LED */
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_ON);
                 ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
@@ -148,8 +152,10 @@ void TaskMeasure::run(){
         } break;
         case ACT_MEASURE: {
             if(millis() > lastStateChange + WAIT_LED_ON_TO_ACT_MEASURE){
+                Serial.printf("State act measure, time: %ld ", millis());
                 /* take reading */
                 activeReading = analogRead(ADC_PIN);
+                Serial.printf("adc: %d\n", darkReading);
                 /* Take time */        
                 time_t t = time(NULL);
                 tm = *localtime(&t);
@@ -167,6 +173,7 @@ void TaskMeasure::run(){
         case LED_OFF: {
             if(millis() > lastStateChange + WAIT_ACT_MEASURE_TO_LED_OFF){
                 /* turn on LED */
+                Serial.printf("State led off, time: %ld\n", millis());
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_OFF);
                 ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
                 lastStateChange = millis();
@@ -174,14 +181,17 @@ void TaskMeasure::run(){
             }
         } break;
         case COMPUTE_MEASURE: {
-            /* Format string */
-            sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f, %d, %.3f\n", 
+            /* Format string -- CSV Format 
+             * Timestamp, dark Reading, dark Reading V, active Reading, active Reading V, 
+             * tempAdc, temp F, battAdc, batt V, diff, diff V*/
+            sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f, %d, %.3f, %d, %.3f\n", 
                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                     tm.tm_hour, tm.tm_min, tm.tm_sec, 
                     darkReading, getVoltageFromAdc(darkReading), 
                     activeReading, getVoltageFromAdc(activeReading),
                     tempAdc, getTempFromAdc(tempAdc),
-                    battAdc, getVoltageFromAdc(battAdc));
+                    battAdc, getVoltageFromAdc(battAdc),
+                    activeReading - darkReading, getVoltageFromAdc(activeReading - darkReading));
             Serial.printf("%s\r", timeCStr);
             File f;
             if(PS_FileSystem::open(&f, DATA, FILE_APPEND)){
