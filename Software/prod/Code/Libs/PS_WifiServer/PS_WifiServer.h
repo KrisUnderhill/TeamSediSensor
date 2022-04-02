@@ -27,6 +27,7 @@ class wifiServer {
         static void handleGet();
         static void handleGodMode();
         static void handleGetMeasure();
+        static void handleDemo();
         static void loadDataFile();
         static void loadIcon();
 

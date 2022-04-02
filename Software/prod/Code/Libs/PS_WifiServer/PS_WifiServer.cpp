@@ -15,6 +15,44 @@ void wifiServer::handleNotFound() {
         loadIcon();
         return;
     }
+#ifdef DEMO_ENABLED
+    String demoChart = "/demo/chart.js";
+    String demoMoment = "/demo/moment.js";
+    String demoChartPlugin = "/demo/chartjs_plugin_annotation_min.js";
+    String demoChartAdapter = "/demo/chartjs_adapter_moment";
+    if(server.uri() == demoChart){
+        File demoChartFile;
+        PS_FileSystem::forceOpen(&demoChartFile, "/demo/chart.js", FILE_READ);
+        if (server.streamFile(demoChartFile, "application/javascript" ) != demoChartFile.size()) {
+            Serial.println("Sent less data than expected!");
+        }
+        return;
+    }
+    if(server.uri() == demoMoment) {
+        File demoMomentFile;
+        PS_FileSystem::forceOpen(&demoMomentFile, "/demo/moment.js", FILE_READ);
+        if (server.streamFile(demoMomentFile, "application/javascript" ) != demoMomentFile.size()) {
+            Serial.println("Sent less data than expected!");
+        }
+        return;
+    }
+    if(server.uri() == demoChartPlugin){
+        File demoChartPluginFile;
+        PS_FileSystem::forceOpen(&demoChartPluginFile, "/demo/chartjs_plugin_annotation_min.js", FILE_READ);
+        if (server.streamFile(demoChartPluginFile, "application/javascript" ) != demoChartPluginFile.size()) {
+            Serial.println("Sent less data than expected!");
+        }
+        return;
+    }
+    if(server.uri() == demoChartAdapter){
+        File demoChartAdapterFile;
+        PS_FileSystem::forceOpen(&demoChartAdapterFile, "/demo/charjs_adapter_moment", FILE_READ);
+        if (server.streamFile(demoChartAdapterFile, "application/javascript" ) != demoChartAdapterFile.size()) {
+            Serial.println("Sent less data than expected!");
+        }
+        return;
+    }
+#endif
     String message = "ERROR 404\n\n";
     message += "URI: ";
     message += server.uri();
@@ -93,6 +131,23 @@ void wifiServer::handleGetMeasure(){
 }
 #endif
 
+#if DEMO_ENABLED == true
+void wifiServer::handleDemo(){
+    Serial.println("GOT Demo Request");
+    String demoType = "text/html";
+    File demoFile;
+    if(!PS_FileSystem::forceOpen(&demoFile, "/demo/index.htm", FILE_READ)){
+        Serial.println("Could not return file");
+        return;
+    }
+    if(server.streamFile(demoFile, demoType) != demoFile.size()) {
+        Serial.println("Sent Less than expected");
+    }
+
+    PS_FileSystem::forceClose("/demo/index.htm");
+}
+#endif
+
 void wifiServer::start(){
     Serial.println("Configuring access point...");
 
@@ -119,6 +174,9 @@ void wifiServer::start(){
 #if GOD_MODE_ENABLED == true
     server.on("/god/", HTTP_GET, handleGodMode);
     httpUpdater.setup(&server, "/god/update/");
+#endif
+#if DEMO_ENABLED == true
+    server.on("/demo", HTTP_GET, handleDemo);
 #endif
     server.onNotFound(handleNotFound);
 

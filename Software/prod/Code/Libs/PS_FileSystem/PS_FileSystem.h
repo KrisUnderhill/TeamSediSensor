@@ -18,12 +18,15 @@
  * requires user to update if changes 
  */
 typedef enum fileIndex {DATA, HOME, GOD_HOME, ICON} fileIndex;
+    //, DEMO_CHART, DEMO_HOME, DEMO_MOMENT, DEMO_CHART_PLUGIN, DEMO_CHART_ADAPTER} fileIndex;
 
 class PS_FileSystem {
     public: 
         static void fullInit();
         static void wakeInit();
+        static bool forceOpen(File* f, const char* name, const char* mode);
         static bool open(File* f, int index, const char* mode);
+        static void forceClose(const char* name);
         static void close(int index);
         static void getmd5Sum(char* output, const char* path);
         static void getmd5Sum(char* output, char* str, uint16_t len);

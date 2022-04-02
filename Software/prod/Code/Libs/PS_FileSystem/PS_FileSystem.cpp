@@ -25,6 +25,15 @@ void PS_FileSystem::wakeInit(){
     }
 }
 
+bool PS_FileSystem::forceOpen(File* f, const char* name, const char* mode){
+    *f = fileSystem.open(name, mode);
+    return true;
+}
+
+void PS_FileSystem::forceClose(const char* name){
+    ;
+}
+
 bool PS_FileSystem::open(File* f, int index, const char*  mode){
     /* check locks */
     if((fileLocks & (1 << index)) == 0) {

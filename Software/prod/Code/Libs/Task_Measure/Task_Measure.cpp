@@ -24,15 +24,17 @@
 #define LEDC_DUTY_OFF           (0) // Set duty to 0%.
 #define LEDC_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 1 kHz
 
-int TaskMeasure::activeReading = 0;
-int TaskMeasure::darkReading = 0;
-int TaskMeasure::tempAdc = 0;
-int TaskMeasure::battAdc = 0;
+std::vector<int> TaskMeasure::darkReading_v(NUM_TO_AVG);
+std::vector<int> TaskMeasure::actReading_v(NUM_TO_AVG);
+std::vector<int> TaskMeasure::tempAdc_v(NUM_TO_AVG);
+std::vector<int> TaskMeasure::battAdc_v(NUM_TO_AVG);
+
 char TaskMeasure::timeCStr[MSG_LEN] = {0};
 bool TaskMeasure::readyToSleep = false;
 int64_t TaskMeasure::nextRun = 0;
 unsigned long TaskMeasure::lastStateChange = 0;
 enum TaskMeasureStates TaskMeasure::taskMeasureState = WAITING;
+int TaskMeasure::stateIndex = 0;
 
 
 void TaskMeasure::fullInit(){
@@ -127,15 +129,21 @@ void TaskMeasure::run(){
                 Serial.printf("State Waiting, time: %ld\n", millis());
                 nextRun += TIME_TO_SLEEP*uS_TO_S_FACTOR;
                 digitalWrite(PHOTOTRANSISTOR_PIN, HIGH);
+                darkReading_v.clear();
+                actReading_v.clear();
+                tempAdc_v.clear();
+                battAdc_v.clear();
                 lastStateChange = millis();
                 taskMeasureState = AMB_MEASURE;
+                stateIndex = 0;
             } 
         } break; 
         case AMB_MEASURE: {
             if(millis() > lastStateChange + WAIT_PHOTOTRANSISTOR_ON_TO_AMB_MEASURE){
                 Serial.printf("State amb Measure, time: %ld ", millis());
-                darkReading = analogRead(ADC_PIN);
-                Serial.printf("adc: %d\n", darkReading);
+                int darkVal= analogRead(ADC_PIN);
+                Serial.printf("adc: %d\n", darkVal);
+                darkReading_v.push_back(darkVal);
                 lastStateChange = millis();
                 taskMeasureState = LED_ON;
             }
@@ -154,17 +162,17 @@ void TaskMeasure::run(){
             if(millis() > lastStateChange + WAIT_LED_ON_TO_ACT_MEASURE){
                 Serial.printf("State act measure, time: %ld ", millis());
                 /* take reading */
-                activeReading = analogRead(ADC_PIN);
-                Serial.printf("adc: %d\n", darkReading);
-                /* Take time */        
-                time_t t = time(NULL);
-                tm = *localtime(&t);
+                int activeVal = analogRead(ADC_PIN);
+                Serial.printf("adc: %d\n", activeVal);
+                actReading_v.push_back(activeVal);
 
                 /* Take Temp */
-                tempAdc = analogRead(TEMP_PIN);
+                int tempAdcVal = analogRead(TEMP_PIN);
+                tempAdc_v.push_back(tempAdcVal);
                 
                 /* Take Batt */
-                battAdc = analogRead(BATT_PIN);
+                int battAdcVal = analogRead(BATT_PIN);
+                battAdc_v.push_back(battAdcVal);
 
                 lastStateChange = millis();
                 taskMeasureState = LED_OFF;
@@ -177,21 +185,42 @@ void TaskMeasure::run(){
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_OFF);
                 ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
                 lastStateChange = millis();
-                taskMeasureState = COMPUTE_MEASURE;
+                if(stateIndex < NUM_TO_AVG){
+                    stateIndex++;
+                    taskMeasureState = AMB_MEASURE;
+                } else{
+                    taskMeasureState = COMPUTE_MEASURE;
+                }
             }
         } break;
         case COMPUTE_MEASURE: {
+            /* Take time */        
+            time_t t = time(NULL);
+            tm = *localtime(&t);
+
+            int darkReadingAvg = 0, activeReadingAvg = 0, tempAdcAvg = 0, battAdcAvg = 0;
+            for(int i = 0; i < NUM_TO_AVG; i++){
+                darkReadingAvg += darkReading_v[i];
+                activeReadingAvg += actReading_v[i];
+                tempAdcAvg += tempAdc_v[i];
+                battAdcAvg += battAdc_v[i];
+            }
+            darkReadingAvg /= NUM_TO_AVG;
+            activeReadingAvg /= NUM_TO_AVG;
+            tempAdcAvg /= NUM_TO_AVG;
+            battAdcAvg /= NUM_TO_AVG;
+
             /* Format string -- CSV Format 
              * Timestamp, dark Reading, dark Reading V, active Reading, active Reading V, 
              * tempAdc, temp F, battAdc, batt V, diff, diff V*/
             sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f, %d, %.3f, %d, %.3f\n", 
                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                     tm.tm_hour, tm.tm_min, tm.tm_sec, 
-                    darkReading, getVoltageFromAdc(darkReading), 
-                    activeReading, getVoltageFromAdc(activeReading),
-                    tempAdc, getTempFromAdc(tempAdc),
-                    battAdc, getVoltageFromAdc(battAdc),
-                    activeReading - darkReading, getVoltageFromAdc(activeReading - darkReading));
+                    darkReadingAvg, getVoltageFromAdc(darkReadingAvg), 
+                    activeReadingAvg, getVoltageFromAdc(activeReadingAvg),
+                    tempAdcAvg, getTempFromAdc(tempAdcAvg),
+                    battAdcAvg, getVoltageFromAdc(battAdcAvg),
+                    activeReadingAvg - darkReadingAvg, getVoltageFromAdc(activeReadingAvg - darkReadingAvg));
             Serial.printf("%s\r", timeCStr);
             File f;
             if(PS_FileSystem::open(&f, DATA, FILE_APPEND)){

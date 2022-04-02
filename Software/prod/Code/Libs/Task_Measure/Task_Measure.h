@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include <time.h>
+#include <vector>
 #include "../PS_FileSystem/PS_FileSystem.h"
 
 /* Pins */
@@ -40,16 +41,18 @@ class TaskMeasure {
         static void IRAM_ATTR TimerISR();
         static double getVoltageFromAdc(int adcReading);
         static double getTempFromAdc(int adcReading);
-        static int darkReading;
-        static int activeReading;
-        static int tempAdc;
-        static int battAdc;
+        static std::vector<int> darkReading_v;
+        static std::vector<int> actReading_v;
+        static std::vector<int> tempAdc_v;
+        static std::vector<int> battAdc_v;
+
         static char timeCStr[MSG_LEN];
         static bool readyToSleep;
         static volatile bool taskRunning;
         static RTC_DATA_ATTR int64_t nextRun;
         static unsigned long lastStateChange;
         static enum TaskMeasureStates taskMeasureState;
+        static int stateIndex;
 };
 
 #endif /* TASK_MEASURE_H_ */
