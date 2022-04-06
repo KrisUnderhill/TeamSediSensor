@@ -10,11 +10,16 @@
  * Because I'm using libraries in other libraries I'm just listing them here 
  * until I find a better way. Even if they are not used here necessarily
  */
-#include "Task_Measure.h"
-#include "PS_FileSystem.h"
+
 #include "config.h"
+#include "Task_Measure.h"
 #include "Task_Wifi.h"
+#include "PS_FileSystem.h"
+#if USE_FFAT == false
+    #include "PS_SD.h"
+#endif
 #include "PS_WifiServer.h"
+
 
 std::string inputString = "";
 bool stringComplete = false;

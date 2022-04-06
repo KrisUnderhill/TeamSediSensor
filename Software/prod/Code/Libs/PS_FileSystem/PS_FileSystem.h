@@ -5,11 +5,11 @@
 #include "../Config/config.h"
 #include "FS.h"
 
-#ifdef USE_FFAT
+#if USE_FFAT == true
     #include "FFat.h"
     #define fileSystem FFat
 #else
-    #include "SD.h"
+    #include "../PS_SD/PS_SD.h"
     #include "SPI.h"
     #define fileSystem SD
 #endif
