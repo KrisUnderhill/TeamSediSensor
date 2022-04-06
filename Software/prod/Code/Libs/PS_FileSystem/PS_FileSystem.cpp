@@ -68,13 +68,14 @@ void PS_FileSystem::getmd5Sum(char* output, char* str, uint16_t len){
 }
 
 void PS_FileSystem::verifyFileSystem(){
-    char expectedHash[33];
-    char gotHash[33];
     for(int i = 0; i < numDirs; i++){
         fileSystem.mkdir(genDir[i].name);
     }
     for(int i = 0; i < numFiles; i++){
         if(fileSystem.exists(genFiles[i].name)){
+#if FILESYSTEM_STRICT == true
+            char expectedHash[33];
+            char gotHash[33];
             File f = fileSystem.open(genFiles[i].name);
             if(f.size() == genFiles[i].size){
                 Serial.printf("Found File: %s\r\n", f.name());
@@ -88,6 +89,9 @@ void PS_FileSystem::verifyFileSystem(){
                         continue;
                 }
             }
+#else
+            continue;
+#endif
         }
         writeExpectedFile(i);
     }
