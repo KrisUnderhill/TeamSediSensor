@@ -321,7 +321,7 @@ desc 'check if wifi is on from micro'
 task :listWifi do
   while true
     begin 
-      output = `iwlist wlp2s0 scan | grep ESSID`
+      output = `nmcli dev wifi`
       if output.match?("TSS")
         puts "TSS WIFI Available" 
       else
@@ -329,6 +329,21 @@ task :listWifi do
       end
       $stdout.flush
       sleep 0.5
+    rescue Interrupt
+      puts "\n"
+      break
+    end
+  end
+end
+
+desc 'read data string'
+task :readWifiData do
+  while true
+    begin 
+      output = `curl "http://tss.local/measure.txt"`
+      puts output
+      $stdout.flush
+      sleep 1
     rescue Interrupt
       puts "\n"
       break
