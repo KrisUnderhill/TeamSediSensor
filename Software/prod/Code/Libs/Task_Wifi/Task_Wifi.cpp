@@ -17,7 +17,7 @@ esp_timer_create_args_t TaskWifi::shutOffTimerArgs = {
 
 void IRAM_ATTR TaskWifi::buttonInt(){
     if(taskWifiState == TASK_WIFI_OFF)
-        taskWifiState = TASK_WIFI_START;
+        taskWifiState = TASK_WIFI_DEBOUNCE;
 }
 
 void TaskWifi::fullInit(){
@@ -31,8 +31,8 @@ void TaskWifi::fullInit(){
 }
 
 void TaskWifi::wakeInit(){
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
-    attachInterrupt(BUTTON_PIN, buttonInt, FALLING);
+    pinMode(BUTTON_PIN, INPUT_PULLDOWN);
+    attachInterrupt(BUTTON_PIN, buttonInt, RISING);
     esp_timer_create(&shutOffTimerArgs, &shutOffTimer);
     if(WIFI_ALWAYS_ON){
         taskWifiState = TASK_WIFI_START;
@@ -42,6 +42,17 @@ void TaskWifi::wakeInit(){
 void TaskWifi::run(){
     switch(taskWifiState){
         case TASK_WIFI_OFF:
+            break;
+        case TASK_WIFI_DEBOUNCE:
+            static unsigned long beginDebounce = millis();
+            if((millis()-beginDebounce) > 100){
+                Serial.println("Ending Debounce");
+                if(digitalRead(BUTTON_PIN) == HIGH){
+                    taskWifiState = TASK_WIFI_START;
+                } else {
+                    taskWifiState = TASK_WIFI_OFF;
+                }
+            }
             break;
         case TASK_WIFI_START:
             readyToSleep = false;

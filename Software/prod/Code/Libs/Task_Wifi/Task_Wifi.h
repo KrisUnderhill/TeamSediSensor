@@ -19,7 +19,7 @@ extern "C" {
 
 #define BUTTON_PIN 33
 
-enum TaskWifiStates {TASK_WIFI_OFF, TASK_WIFI_START, TASK_WIFI_RUN, TASK_WIFI_STOP};
+enum TaskWifiStates {TASK_WIFI_OFF, TASK_WIFI_DEBOUNCE, TASK_WIFI_START, TASK_WIFI_RUN, TASK_WIFI_STOP};
 
 class TaskWifi {
     public: 
