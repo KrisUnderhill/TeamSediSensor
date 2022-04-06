@@ -214,14 +214,20 @@ void TaskMeasure::run(){
             /* Format string -- CSV Format 
              * Timestamp, dark Reading, dark Reading V, active Reading, active Reading V, 
              * tempAdc, temp F, battAdc, batt V, diff, diff V*/
-            sprintf(timeCStr, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f, %d, %.3f, %d, %.3f\n", 
+            snprintf(timeCStr, MSG_LEN, "%d-%02d-%02d %02d:%02d:%02d, %d, %.3f, %d, %.3f, %d, %.1f, %d, %.3f, %d, %.3f, %.3f", 
                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
                     tm.tm_hour, tm.tm_min, tm.tm_sec, 
                     darkReadingAvg, getVoltageFromAdc(darkReadingAvg), 
                     activeReadingAvg, getVoltageFromAdc(activeReadingAvg),
                     tempAdcAvg, getTempFromAdc(tempAdcAvg),
                     battAdcAvg, getVoltageFromAdc(battAdcAvg),
-                    activeReadingAvg - darkReadingAvg, getVoltageFromAdc(activeReadingAvg - darkReadingAvg));
+                    activeReadingAvg - darkReadingAvg, getVoltageFromAdc(activeReadingAvg - darkReadingAvg),
+                    getNtuFromAdc(darkReadingAvg, activeReadingAvg));
+            if(!validMeasure(darkReadingAvg, activeReadingAvg)){
+                snprintf(timeCStr, MSG_LEN, "%s, *\n", timeCStr);
+            } else{
+                snprintf(timeCStr, MSG_LEN, "%s\n", timeCStr);
+            }
             Serial.printf("%s\r", timeCStr);
             File f;
             if(PS_FileSystem::open(&f, DATA, FILE_APPEND)){
@@ -249,3 +255,20 @@ double TaskMeasure::getTempFromAdc(int adcReading){
     return temp;
 }
 
+double TaskMeasure::getNtuFromAdc(int ambReading, int actReading){
+    double readingDiff = (double)actReading - (double)ambReading;
+    double ntuCalibrated = (readingDiff + 40.327)/(1.1755);
+    return ntuCalibrated;
+}
+
+bool TaskMeasure::validMeasure(int ambReading, int actReading){
+    const int LOWER_LIMIT_ADC = 76;
+    const int SATURATION_LIMIT_ADC = 4000;
+    if(ambReading > SATURATION_LIMIT_ADC)
+        return false;
+    if(actReading > SATURATION_LIMIT_ADC)
+        return false;
+    if((actReading - ambReading) < LOWER_LIMIT_ADC)
+        return false;
+    return true;
+}

@@ -41,6 +41,8 @@ class TaskMeasure {
         static void IRAM_ATTR TimerISR();
         static double getVoltageFromAdc(int adcReading);
         static double getTempFromAdc(int adcReading);
+        static double getNtuFromAdc(int ambReading, int actReading);
+        static bool validMeasure(int ambReading, int actReading);
         static std::vector<int> darkReading_v;
         static std::vector<int> actReading_v;
         static std::vector<int> tempAdc_v;
