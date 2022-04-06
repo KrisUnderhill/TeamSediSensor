@@ -1,5 +1,5 @@
 #include "PS_WifiServer.h"
- 
+
 WebServer wifiServer::server(80);
 HTTPUpdateServer wifiServer::httpUpdater;
 
@@ -151,8 +151,12 @@ void wifiServer::handleDemo(){
 void wifiServer::start(){
     Serial.println("Configuring access point...");
 
-    // You can remove the password parameter if you want the AP to be open.
-    WiFi.softAP(ssid, password);
+    /* psswd: can be removed to be open 
+     * 1 - WIFI channel
+     * 0 - hidden (false -> broadcast)
+     * 1 - max connected 
+     */
+    WiFi.softAP(ssid, password, 1, 0, 1);
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(myIP);
