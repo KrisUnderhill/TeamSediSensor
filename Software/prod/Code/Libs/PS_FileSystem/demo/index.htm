@@ -45,47 +45,47 @@
             //Extreme Line
             line1: {
               label: {
-                content: 'EXTREME',
+                content: 'EXTREME RISK',
                 color: 'white',
                 backgroundColor: 'rgb(242, 82, 82)',
                 enabled: true,
-                position: 'end'
+                position: 'start'
               },
               type: 'line',
-              yMin: 40,
-              yMax: 40,
-              borderColor: 'rgb(242, 82, 82)',
-              borderWidth: 2,
+              yMin: 400,
+              yMax: 400,
+              borderColor: 'rgb(242, 82, 82, 0.15)',
+              borderWidth: 150,
             },
             //High Line
             line2: {
               label: {
-                content: 'HIGH',
+                content: 'HIGH RISK',
                 color: 'white',
                 backgroundColor: 'rgb(242, 148, 34)',
                 enabled: true,
-                position: 'end'
+                position: 'start'
               },
               type: 'line',
-              yMin: 30,
-              yMax: 30,
-              borderColor: 'rgb(242, 148, 34)',
-              borderWidth: 2,
+              yMin: 200,
+              yMax: 200,
+              borderColor: 'rgb(242, 148, 34, 0.15)',
+              borderWidth: 0,
             },
             //Good Line
             line3: {
               label: {
-                content: 'GOOD',
+                content: 'LOW RISK',
                 color: 'white',
                 backgroundColor: 'rgb(27, 242, 163)',
                 enabled: true,
-                position: 'end'
+                position: 'start'
               },
               type: 'line',
               yMin: 5,
               yMax: 5,
-              borderColor: 'rgb(27, 242, 163)',
-              borderWidth: 2,
+              borderColor: 'rgb(27, 242, 163, 0.15)',
+              borderWidth: 80,
             }
           }
         },
@@ -96,10 +96,10 @@
         },
         title: {
           display: true,
-          text: 'Concentration Level Testing',
+          text: 'Team 09: Sedi Sensor Turbidity',
           font: {
-              size: 25,
-              family: 'Verdana'
+              size: 20,
+              family: 'Helvetica'
             }
         }
       },
@@ -115,6 +115,9 @@
       //time scale setup with axes
       scales: {
         x: {
+          grid: {
+            display: false
+          },
           type: 'time',
           time: {
             displayFormats: {
@@ -130,7 +133,7 @@
         y: {
           title: {
             display: true,
-            text: 'Turbidity (ntu)',
+            text: 'Turbidity (NTU)',
             
           }
         },
@@ -140,14 +143,15 @@
       elements: {
         line: {
           cubicInterpolationMode: 'monotone'
-        }
+        },
       }
     },
   };
 </script>
 
 <script>
-  Chart.defaults.font.size = 16;
+  Chart.defaults.font.size = 12;
+  Chart.defaults.font.family = 'Helvetica';
   const ctx = document.getElementById('myChart');
   const myChart = new Chart(ctx,
     config
@@ -184,30 +188,34 @@
   }
 </style>
 
-<button id="myBtn" class="button button1">New Data</button>
-<input id="newDataText" type="number"></input>
+
+<!-- <button id="myBtn" class="button button1">New Data</button>
+<input id="newDataText" type="number"></input> -->
 
 <!-- Button Press/Random Data Adding Script -->
 <script>
-  document.getElementById("myBtn").addEventListener("click", (event) => {
-    const data = myChart.data;
-    const date = new Date();
-    if (data.datasets.length > 0) {
-      // data.labels.push(date);
-      data.datasets[0].data.push({
-        x: new Date().toISOString(),
-        y: document.getElementById("newDataText").value
-      });
+//   document.getElementById("myBtn").addEventListener("click", (event) => {
+//     const data = myChart.data;
+//     const date = new Date();
+//     if (data.datasets.length > 0) {
+//       // data.labels.push(date);
+//       data.datasets[0].data.push({
+//         x: new Date().toISOString(),
+//         y: document.getElementById("newDataText").value
+//       });
       
-      myChart.update();
+//       myChart.update();
       
-      //only having so much data on chart
-      if (data.datasets[0].data.length > 10){
-        data.datasets[0].data.shift();
-      }
-    }
-  });
+//       //only having so much data on chart
+//       if (data.datasets[0].data.length > 10){
+//         data.datasets[0].data.shift();
+//       }
+//     }
+//   });
 
+  
+  //Random points being set every interval
+  
   function requestUpdate() {
       const Http = new XMLHttpRequest();
       const url = "http://tss.local/measure.txt";
@@ -216,9 +224,10 @@
 
       Http.onreadystatechange = (e)=> {
           if(!!Http.responseText){
-              const DATA_INDEX = 3; 
+              const DATA_INDEX = 11; 
               const errorRegex = /ERROR 404/g;
               if(errorRegex.test(Http.responseText)){
+                  console.log("Saw ERRROR");
                   return;
               }
               var measureArr = Http.responseText.trim().split(',');
@@ -234,7 +243,7 @@
                 myChart.update();
                 
                 //only having so much data on chart
-                if (data.datasets[0].data.length > 10){
+                if (data.datasets[0].data.length > 20){
                   data.datasets[0].data.shift();
                 }
               }

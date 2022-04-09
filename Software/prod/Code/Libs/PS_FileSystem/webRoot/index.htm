@@ -59,8 +59,9 @@
                       return;
                   }
                   var measureArr = Http.responseText.trim().split(',');
-                  var idArr = ["time", "amb_adc", "amb_volt", "act_adc", "act_volt", "temp_adc", "temp_f", "batt_adc", "batt_v"];
+                  var idArr = ["time", "amb_adc", "amb_volt", "act_adc", "act_volt", "temp_adc", "temp_f", "batt_adc", "batt_v", "diff_adc", "diff_v", "ntu_calib"];
                   idArr.forEach((element,index) => document.getElementById(element).innerHTML = measureArr[index]);
+                  console.log(measureArr);
               }
           }
           setTimeout(requestUpdate, 1000);
@@ -86,28 +87,38 @@
   <table>
     <tr>
       <th></th>
-      <th>ADC Reading</th>
       <th>Measurement</th>
+      <th>ADC Reading</th>
+    </tr>
+    <tr>
+      <td>NTU</td>
+      <td><span id="ntu_calib"></span> NTU</td>
+      <td></td>
     </tr>
     <tr>
       <td>Amb Reading</td>
-      <td id="amb_adc"></td>
       <td><span id="amb_volt"></span> V</td>
+      <td id="amb_adc"></td>
     </tr>
     <tr>
       <td>Act Reading</td>
-      <td><span id="act_adc"></td>
       <td><span id="act_volt"></span> V</td>
+      <td><span id="act_adc"></td>
+    </tr>
+    <tr>
+      <td>Diff Reading</td>
+      <td><span id="diff_v"></span> V</td>
+      <td><span id="diff_adc"></td>
     </tr>
     <tr>
       <td>Temp</td>
-      <td id="temp_adc"></td>
       <td><span id="temp_f"></span> F</td>
+      <td id="temp_adc"></td>
     </tr>
     <tr> 
       <td>Batt</td>
-      <td id="batt_adc"></td>
       <td><span id="batt_v"></span> V</td>
+      <td id="batt_adc"></td>
     </tr>
   </table>
   <div onClick="downloadButton_OnClick();" 
